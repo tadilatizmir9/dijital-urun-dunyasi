@@ -69,26 +69,32 @@ export const SearchAutocomplete = ({ value, onChange, onSearch }: SearchAutocomp
   }, [value]);
 
   const fetchSuggestions = async (searchTerm: string) => {
+    console.log('Fetching suggestions for:', searchTerm);
     setLoading(true);
     setIsOpen(true);
 
     // Fetch products
-    const { data: productsData } = await supabase
+    const { data: productsData, error: productsError } = await supabase
       .from("products")
       .select("id, title, image_url")
       .or(`title.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%`)
       .limit(5);
 
     // Fetch categories
-    const { data: categoriesData } = await supabase
+    const { data: categoriesData, error: categoriesError } = await supabase
       .from("categories")
       .select("id, name, slug, icon")
       .ilike("name", `%${searchTerm}%`)
       .limit(3);
 
+    console.log('Products found:', productsData?.length || 0, productsError);
+    console.log('Categories found:', categoriesData?.length || 0, categoriesError);
+
     if (productsData) setProducts(productsData);
     if (categoriesData) setCategories(categoriesData);
     setLoading(false);
+    
+    console.log('Dropdown isOpen:', true, 'Total results:', (productsData?.length || 0) + (categoriesData?.length || 0));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -113,7 +119,7 @@ export const SearchAutocomplete = ({ value, onChange, onSearch }: SearchAutocomp
     onChange(e.target.value);
   };
 
-  const showSuggestions = isOpen && (products.length > 0 || categories.length > 0);
+  const showSuggestions = isOpen && (products.length > 0 || categories.length > 0 || loading);
 
   return (
     <div ref={wrapperRef} className="relative">
@@ -122,11 +128,12 @@ export const SearchAutocomplete = ({ value, onChange, onSearch }: SearchAutocomp
           <SearchIcon className="absolute left-6 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground z-10" />
           <Input
             type="text"
-            placeholder="Mockup, şablon, preset ara…"
+            placeholder="En az 2 karakter yazın..."
             value={value}
             onChange={handleInputChange}
             onFocus={() => {
-              if (value.trim().length >= 2) {
+              console.log('Input focused, value length:', value.trim().length);
+              if (value.trim().length >= 2 && (products.length > 0 || categories.length > 0)) {
                 setIsOpen(true);
               }
             }}
@@ -138,7 +145,7 @@ export const SearchAutocomplete = ({ value, onChange, onSearch }: SearchAutocomp
 
       {/* Suggestions Dropdown */}
       {showSuggestions && (
-        <div className="absolute top-full left-0 right-0 mt-2 bg-card border-2 border-border rounded-2xl shadow-2xl overflow-hidden z-50 animate-fade-in">
+        <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-gray-900 border-2 border-border rounded-2xl shadow-2xl overflow-hidden z-[100] animate-fade-in">
           <div className="max-h-[400px] overflow-y-auto">
             {/* Categories Section */}
             {categories.length > 0 && (
@@ -192,24 +199,34 @@ export const SearchAutocomplete = ({ value, onChange, onSearch }: SearchAutocomp
 
             {/* Loading State */}
             {loading && products.length === 0 && categories.length === 0 && (
-              <div className="p-6 text-center">
+              <div className="p-6 text-center bg-white dark:bg-gray-900">
+                <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-primary border-t-transparent mb-2"></div>
                 <p className="text-sm text-muted-foreground">Aranıyor...</p>
+              </div>
+            )}
+            
+            {/* No Results */}
+            {!loading && products.length === 0 && categories.length === 0 && isOpen && value.length >= 2 && (
+              <div className="p-6 text-center bg-white dark:bg-gray-900">
+                <p className="text-sm text-muted-foreground">Sonuç bulunamadı</p>
               </div>
             )}
           </div>
 
           {/* View All Results Footer */}
-          <div className="border-t border-border bg-muted/30 p-3">
-            <button
-              onClick={() => {
-                setIsOpen(false);
-                onSearch(value);
-              }}
-              className="w-full text-center text-sm font-bold text-primary hover:text-primary/80 transition-colors"
-            >
-              Tüm sonuçları görüntüle →
-            </button>
-          </div>
+          {(products.length > 0 || categories.length > 0) && (
+            <div className="border-t border-border bg-gray-50 dark:bg-gray-800 p-3">
+              <button
+                onClick={() => {
+                  setIsOpen(false);
+                  onSearch(value);
+                }}
+                className="w-full text-center text-sm font-bold text-primary hover:text-primary/80 transition-colors"
+              >
+                Tüm sonuçları görüntüle →
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>
