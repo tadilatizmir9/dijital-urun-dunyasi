@@ -1,8 +1,9 @@
 import { Link } from "react-router-dom";
-import { Search, ChevronDown, Palette, Sparkles, Image as ImageIcon, FileText, Wand2, Layers, Package, Zap } from "lucide-react";
+import { Search, ChevronDown, Palette, Sparkles, Image as ImageIcon, FileText, Wand2, Layers, Package, Zap, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/lib/supabaseClient";
+import { useFavorites } from "@/hooks/useFavorites";
 
 const iconMap: Record<string, any> = {
   "🎨": Palette,
@@ -24,6 +25,7 @@ export const Header = () => {
   const [categoriesOpen, setCategoriesOpen] = useState(false);
   const [categories, setCategories] = useState<any[]>([]);
   const timeoutRef = useRef<NodeJS.Timeout>();
+  const { getFavoriteCount } = useFavorites();
 
   useEffect(() => {
     fetchCategories();
@@ -134,6 +136,16 @@ export const Header = () => {
 
             <Link to="/blog" className="px-5 py-2.5 text-base font-bold text-foreground hover:text-primary hover:bg-primary/5 rounded-xl transition-all duration-200">
               Blog
+            </Link>
+
+            <Link to="/favoriler" className="px-5 py-2.5 text-base font-bold text-foreground hover:text-primary hover:bg-primary/5 rounded-xl transition-all duration-200 flex items-center gap-2">
+              <Heart className="h-4 w-4" />
+              Favoriler
+              {getFavoriteCount() > 0 && (
+                <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-red-500 text-white text-xs font-bold">
+                  {getFavoriteCount()}
+                </span>
+              )}
             </Link>
           </nav>
 

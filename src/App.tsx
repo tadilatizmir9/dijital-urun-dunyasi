@@ -16,6 +16,7 @@ import Search from "./pages/Search";
 import Blog from "./pages/Blog";
 import BlogPost from "./pages/BlogPost";
 import Redirect from "./pages/Redirect";
+import Favorites from "./pages/Favorites";
 import AdminLogin from "./pages/admin/AdminLogin";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminProducts from "./pages/admin/AdminProducts";
@@ -60,6 +61,7 @@ const App = () => (
                     <Route path="/kategoriler" element={<Categories />} />
                     <Route path="/kategori/:slug" element={<Category />} />
                     <Route path="/arama" element={<Search />} />
+                    <Route path="/favoriler" element={<Favorites />} />
                     <Route path="/blog" element={<Blog />} />
                     <Route path="/blog/:slug" element={<BlogPost />} />
                     <Route path="/go/:slug" element={<Redirect />} />
