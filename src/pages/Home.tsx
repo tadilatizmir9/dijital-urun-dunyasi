@@ -81,7 +81,7 @@ export default function Home() {
             <div className="text-center space-y-10 animate-fade-in-up">
               <div className="space-y-6">
                 <h1 className="text-5xl sm:text-6xl lg:text-7xl font-black text-foreground leading-[1.1] tracking-tight">
-                  Dijital yaratıcılar için<br />
+                  İçerik üreticiler için<br />
                   <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary via-primary to-secondary">seçilmiş premium içerikler</span>
                 </h1>
                 <p className="text-xl sm:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed font-medium">
