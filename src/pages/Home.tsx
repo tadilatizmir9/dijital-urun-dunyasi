@@ -72,47 +72,83 @@ export default function Home() {
 
       <div className="min-h-screen bg-background">
         {/* Hero Section */}
-        <section className="relative overflow-hidden bg-gradient-to-b from-primary/5 to-transparent py-20 sm:py-32">
-          <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="text-center space-y-8">
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-foreground tracking-tight">
-                Dijital yaratıcılar için seçilmiş<br />
-                <span className="text-primary">mockup, şablon ve stok içerikler</span>
-              </h1>
-              <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-                Aradığın dijital içeriği saniyeler içinde keşfet ve orijinal siteden indir.
-              </p>
+        <section className="relative overflow-hidden py-24 sm:py-32 lg:py-40">
+          {/* Gradient Mesh Background */}
+          <div className="absolute inset-0 gradient-mesh pointer-events-none" />
+          
+          <div className="container relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="text-center space-y-10 animate-fade-in-up">
+              <div className="space-y-6">
+                <h1 className="text-5xl sm:text-6xl lg:text-7xl font-extrabold text-foreground leading-tight">
+                  Dijital yaratıcılar için<br />
+                  <span className="text-gradient">seçilmiş premium içerikler</span>
+                </h1>
+                <p className="text-xl sm:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+                  Mockup, şablon ve dijital stok içerikleri saniyeler içinde keşfet. 
+                  <span className="text-foreground font-semibold"> En kaliteli kaynaklar, tek yerde.</span>
+                </p>
+              </div>
 
               {/* Search Bar */}
-              <form onSubmit={handleSearch} className="max-w-2xl mx-auto">
-                <div className="relative">
-                  <Search className="absolute left-6 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                  <Input
-                    type="text"
-                    placeholder="Mockup, şablon, preset ara…"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="h-14 pl-14 pr-4 rounded-full text-base border-2 focus-visible:ring-2 focus-visible:ring-primary"
-                  />
+              <form onSubmit={handleSearch} className="max-w-3xl mx-auto">
+                <div className="relative group">
+                  <div className="absolute inset-0 bg-primary/20 rounded-full blur-2xl group-hover:bg-primary/30 transition-all duration-300" />
+                  <div className="relative flex items-center bg-card rounded-full border-2 border-border hover:border-primary/50 transition-all duration-300 shadow-xl">
+                    <Search className="absolute left-6 h-6 w-6 text-muted-foreground" />
+                    <Input
+                      type="text"
+                      placeholder="Mockup, şablon, preset ara…"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="h-16 pl-16 pr-32 rounded-full text-lg border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+                    />
+                    <Button 
+                      type="submit" 
+                      size="lg" 
+                      className="absolute right-2 rounded-full gradient-primary hover:shadow-glow transition-all duration-300"
+                    >
+                      Ara
+                    </Button>
+                  </div>
                 </div>
               </form>
+
+              {/* Quick Stats */}
+              <div className="flex flex-wrap justify-center gap-8 pt-8">
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-primary">1000+</div>
+                  <div className="text-sm text-muted-foreground">Dijital Ürün</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-primary">50+</div>
+                  <div className="text-sm text-muted-foreground">Kategori</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-primary">100%</div>
+                  <div className="text-sm text-muted-foreground">Ücretsiz Erişim</div>
+                </div>
+              </div>
             </div>
           </div>
         </section>
 
         {/* Popular Categories */}
-        <section className="py-16 sm:py-20">
+        <section className="py-20 sm:py-28">
           <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <h2 className="text-3xl font-bold text-foreground mb-8">Popüler Kategoriler</h2>
+            <div className="text-center mb-12 space-y-3">
+              <h2 className="text-4xl sm:text-5xl font-extrabold text-foreground">Popüler Kategoriler</h2>
+              <p className="text-lg text-muted-foreground">İhtiyacın olan içeriği hızlıca bul</p>
+            </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {categories.map((category) => (
-                <CategoryCard
-                  key={category.id}
-                  name={category.name}
-                  slug={category.slug}
-                  icon={category.icon}
-                  description={`${category.name} kategorisindeki tüm dijital içerikleri keşfet`}
-                />
+              {categories.map((category, index) => (
+                <div key={category.id} className="animate-fade-in" style={{ animationDelay: `${index * 0.1}s` }}>
+                  <CategoryCard
+                    name={category.name}
+                    slug={category.slug}
+                    icon={category.icon}
+                    description={`${category.name} kategorisindeki tüm dijital içerikleri keşfet`}
+                  />
+                </div>
               ))}
             </div>
           </div>
@@ -120,9 +156,12 @@ export default function Home() {
 
         {/* Featured Products */}
         {featuredProducts.length > 0 && (
-          <section className="py-16 sm:py-20 bg-card">
+          <section className="py-20 sm:py-28 bg-gradient-to-b from-card to-background">
             <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-              <h2 className="text-3xl font-bold text-foreground mb-8">Öne Çıkan Ürünler</h2>
+              <div className="text-center mb-12 space-y-3">
+                <h2 className="text-4xl sm:text-5xl font-extrabold text-foreground">Öne Çıkan Ürünler</h2>
+                <p className="text-lg text-muted-foreground">En çok tercih edilen dijital içerikler</p>
+              </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 {featuredProducts.map((product) => (
                   <ProductCard
@@ -184,25 +223,36 @@ export default function Home() {
         )}
 
         {/* Newsletter CTA */}
-        <section className="py-16 sm:py-20">
+        <section className="py-20 sm:py-28">
           <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="rounded-3xl bg-primary p-8 sm:p-12 text-center">
-              <h2 className="text-3xl font-bold text-primary-foreground mb-4">
-                Haftanın En İyi Dijital Ürünleri
-              </h2>
-              <p className="text-lg text-primary-foreground/90 mb-6 max-w-2xl mx-auto">
-                Ücretsiz mail olarak almak ister misin? Hemen abone ol!
-              </p>
-              <form className="max-w-md mx-auto flex gap-3">
-                <Input
-                  type="email"
-                  placeholder="E-posta adresin"
-                  className="h-12 rounded-full bg-white/10 border-white/20 text-primary-foreground placeholder:text-primary-foreground/60"
-                />
-                <Button type="submit" size="lg" variant="secondary" className="rounded-full">
-                  Abone Ol
-                </Button>
-              </form>
+            <div className="relative overflow-hidden rounded-3xl gradient-primary p-12 sm:p-16 text-center shadow-primary">
+              {/* Decorative elements */}
+              <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl" />
+              <div className="absolute bottom-0 left-0 w-64 h-64 bg-white/10 rounded-full blur-3xl" />
+              
+              <div className="relative z-10 space-y-6">
+                <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-primary-foreground">
+                  Haftanın En İyi Dijital Ürünleri
+                </h2>
+                <p className="text-xl text-primary-foreground/95 max-w-2xl mx-auto">
+                  Ücretsiz mail olarak almak ister misin? Hemen abone ol, hiçbir fırsatı kaçırma!
+                </p>
+                <form className="max-w-lg mx-auto flex flex-col sm:flex-row gap-3 pt-4">
+                  <Input
+                    type="email"
+                    placeholder="E-posta adresin"
+                    className="h-14 rounded-full bg-white/20 border-white/30 text-primary-foreground placeholder:text-primary-foreground/70 backdrop-blur-sm text-lg"
+                  />
+                  <Button 
+                    type="submit" 
+                    size="lg" 
+                    variant="secondary" 
+                    className="rounded-full h-14 px-8 font-semibold gradient-secondary hover:shadow-lg transition-all duration-300"
+                  >
+                    Abone Ol
+                  </Button>
+                </form>
+              </div>
             </div>
           </div>
         </section>
