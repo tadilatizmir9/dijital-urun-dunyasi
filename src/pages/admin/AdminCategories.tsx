@@ -11,9 +11,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Trash2, Pencil, X, Check } from "lucide-react";
+import { Trash2, Pencil, X, Check, FolderTree } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { Helmet } from "react-helmet-async";
+import { Link } from "react-router-dom";
 
 export default function AdminCategories() {
   const [categories, setCategories] = useState<any[]>([]);
@@ -282,6 +283,16 @@ export default function AdminCategories() {
                         <TableCell className="text-muted-foreground">{category.slug}</TableCell>
                         <TableCell className="text-right">
                           <div className="flex items-center justify-end gap-2">
+                            <Link to={`/admin/kategoriler/${category.id}/alt-kategoriler`}>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="text-primary hover:text-primary"
+                              >
+                                <FolderTree className="h-4 w-4 mr-2" />
+                                Alt Kategoriler
+                              </Button>
+                            </Link>
                             <Button
                               variant="ghost"
                               size="icon"

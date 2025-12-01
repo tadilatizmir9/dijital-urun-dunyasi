@@ -24,6 +24,7 @@ import AdminAddProduct from "./pages/admin/AdminAddProduct";
 import AdminBlog from "./pages/admin/AdminBlog";
 import AdminAddBlog from "./pages/admin/AdminAddBlog";
 import AdminCategories from "./pages/admin/AdminCategories";
+import AdminSubcategories from "./pages/admin/AdminSubcategories";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -46,6 +47,7 @@ const App = () => (
               <Route path="blog" element={<AdminBlog />} />
               <Route path="blog-ekle" element={<AdminAddBlog />} />
               <Route path="kategoriler" element={<AdminCategories />} />
+              <Route path="kategoriler/:categoryId/alt-kategoriler" element={<AdminSubcategories />} />
             </Route>
 
             {/* Public Routes (with Header/Footer) */}
