@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
 import { ArrowLeft } from "lucide-react";
+import { Helmet } from "react-helmet-async";
 
 export default function AdminAddProduct() {
   const navigate = useNavigate();
@@ -171,7 +172,12 @@ export default function AdminAddProduct() {
   };
 
   return (
-    <div className="space-y-6 max-w-2xl">
+    <>
+      <Helmet>
+        <title>{isEditMode ? "Ürün Düzenle" : "Yeni Ürün Ekle"} – Admin – Dijitalstok</title>
+      </Helmet>
+
+      <div className="space-y-6 max-w-2xl">
       <div className="flex items-center gap-4">
         <Button
           variant="ghost"
@@ -267,5 +273,6 @@ export default function AdminAddProduct() {
         </Button>
       </form>
     </div>
+    </>
   );
 }

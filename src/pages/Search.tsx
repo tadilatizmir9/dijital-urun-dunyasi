@@ -45,11 +45,14 @@ export default function Search() {
   return (
     <>
       <Helmet>
-        <title>{query ? `"${query}" için arama sonuçları` : "Arama"} – Dijitalstok</title>
-        <meta name="description" content="Dijitalstok'ta ürün ara" />
+        <title>{query ? `"${query}" için arama sonuçları – Dijitalstok` : "Arama – Dijitalstok"}</title>
+        <meta 
+          name="description" 
+          content={query ? `Dijitalstok üzerinde "${query}" araması için bulunan mockup, şablon ve diğer dijital ürünleri görüntüleyin.` : "Dijitalstok üzerinde mockup, şablon ve dijital ürünleri arayın."} 
+        />
       </Helmet>
 
-      <div className="min-h-screen bg-background py-12">
+      <main className="min-h-screen bg-background py-12">
         <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           {/* Search Bar */}
           <div className="mb-8">
@@ -109,7 +112,7 @@ export default function Search() {
             </>
           )}
         </div>
-      </div>
+      </main>
     </>
   );
 }

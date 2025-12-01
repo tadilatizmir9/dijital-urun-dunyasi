@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/table";
 import { Plus, Trash2, Pencil } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { Helmet } from "react-helmet-async";
 
 export default function AdminProducts() {
   const [products, setProducts] = useState<any[]>([]);
@@ -56,7 +57,12 @@ export default function AdminProducts() {
   };
 
   return (
-    <div className="space-y-6">
+    <>
+      <Helmet>
+        <title>Ürün Yönetimi – Admin – Dijitalstok</title>
+      </Helmet>
+
+      <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-foreground">Ürünler</h1>
@@ -137,5 +143,6 @@ export default function AdminProducts() {
         </div>
       )}
     </div>
+    </>
   );
 }

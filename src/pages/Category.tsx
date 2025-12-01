@@ -126,21 +126,21 @@ export default function Category() {
   return (
     <>
       <Helmet>
-        <title>{category.name} – Dijitalstok</title>
+        <title>{category.name} – Dijital ürünler – Dijitalstok</title>
         <meta
           name="description"
-          content={`${category.name} kategorisindeki tüm dijital ürünleri keşfedin.`}
+          content={`Dijitalstok üzerinde ${category.name} kategorisindeki seçilmiş dijital ürünleri keşfedin.`}
         />
       </Helmet>
 
-      <div className="min-h-screen bg-background py-12">
+      <main className="min-h-screen bg-background py-12">
         <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="mb-8">
-            <div className="text-5xl mb-4">{category.icon || "📁"}</div>
+            <div className="text-5xl mb-4" aria-hidden="true">{category.icon || "📁"}</div>
             <h1 className="text-4xl font-bold text-foreground mb-2">{category.name}</h1>
-            <p className="text-lg text-muted-foreground">
+            <h2 className="text-lg text-muted-foreground font-normal">
               {products.length} ürün bulundu
-            </p>
+            </h2>
           </div>
 
           {/* Filtreleme - kategori zaten belirli olduğu için selectedCategory prop'u gönderiyoruz */}
@@ -173,7 +173,7 @@ export default function Category() {
             </div>
           )}
         </div>
-      </div>
+      </main>
     </>
   );
 }

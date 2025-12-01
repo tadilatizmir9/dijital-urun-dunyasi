@@ -74,7 +74,7 @@ export default function ProductDetail() {
         />
       </Helmet>
 
-      <div className="min-h-screen bg-background py-12">
+      <main className="min-h-screen bg-background py-12">
         <div className="container mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
           {/* Back Button */}
           <Link to="/urunler">
@@ -121,10 +121,10 @@ export default function ProductDetail() {
                 </p>
               )}
 
-              {/* Tags */}
+            {/* Tags */}
               {product.tags && product.tags.length > 0 && (
                 <div>
-                  <h3 className="text-sm font-semibold text-foreground mb-3">Etiketler</h3>
+                  <h2 className="text-sm font-semibold text-foreground mb-3">Etiketler</h2>
                   <div className="flex flex-wrap gap-2">
                     {product.tags.map((tag: string, index: number) => (
                       <Badge key={index} variant="outline" className="rounded-full">
@@ -163,7 +163,7 @@ export default function ProductDetail() {
             tags={product.tags}
           />
         </div>
-      </div>
+      </main>
     </>
   );
 }

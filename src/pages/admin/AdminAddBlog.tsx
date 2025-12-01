@@ -11,6 +11,7 @@ import ReactMarkdown from "react-markdown";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import rehypeHighlight from "rehype-highlight";
 import "highlight.js/styles/github-dark.css";
+import { Helmet } from "react-helmet-async";
 
 export default function AdminAddBlog() {
   const navigate = useNavigate();
@@ -93,7 +94,12 @@ export default function AdminAddBlog() {
   };
 
   return (
-    <div className="space-y-6 max-w-5xl">
+    <>
+      <Helmet>
+        <title>Yeni Blog Yazısı Ekle – Admin – Dijitalstok</title>
+      </Helmet>
+
+      <div className="space-y-6 max-w-5xl">
       <div className="flex items-center gap-4">
         <Button
           variant="ghost"
@@ -208,5 +214,6 @@ export default function AdminAddBlog() {
         </Button>
       </form>
     </div>
+    </>
   );
 }
