@@ -1,12 +1,29 @@
 import { Link } from "react-router-dom";
-import { Search, ChevronDown } from "lucide-react";
+import { Search, ChevronDown, Palette, Sparkles, Image as ImageIcon, FileText, Wand2, Layers, Package, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/lib/supabaseClient";
+
+const iconMap: Record<string, any> = {
+  "🎨": Palette,
+  "✨": Sparkles,
+  "🖼️": ImageIcon,
+  "📝": FileText,
+  "🪄": Wand2,
+  "📦": Package,
+  "⚡": Zap,
+  "🎭": Layers,
+};
+
+const getIconComponent = (icon?: string) => {
+  if (!icon) return Package;
+  return iconMap[icon] || Package;
+};
 
 export const Header = () => {
   const [categoriesOpen, setCategoriesOpen] = useState(false);
   const [categories, setCategories] = useState<any[]>([]);
+  const timeoutRef = useRef<NodeJS.Timeout>();
 
   useEffect(() => {
     fetchCategories();
@@ -18,6 +35,17 @@ export const Header = () => {
       .select("*")
       .order("name");
     if (data) setCategories(data);
+  };
+
+  const handleMouseEnter = () => {
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    setCategoriesOpen(true);
+  };
+
+  const handleMouseLeave = () => {
+    timeoutRef.current = setTimeout(() => {
+      setCategoriesOpen(false);
+    }, 150);
   };
 
   return (
@@ -39,10 +67,12 @@ export const Header = () => {
             </Link>
             
             {/* Kategoriler Dropdown */}
-            <div className="relative">
+            <div 
+              className="relative"
+              onMouseEnter={handleMouseEnter}
+              onMouseLeave={handleMouseLeave}
+            >
               <button
-                onMouseEnter={() => setCategoriesOpen(true)}
-                onMouseLeave={() => setCategoriesOpen(false)}
                 className="px-5 py-2.5 text-base font-bold text-foreground hover:text-primary hover:bg-primary/5 rounded-xl transition-all duration-200 flex items-center gap-1"
               >
                 Kategoriler
@@ -52,36 +82,41 @@ export const Header = () => {
               {/* Dropdown Menu */}
               {categoriesOpen && (
                 <div
-                  onMouseEnter={() => setCategoriesOpen(true)}
-                  onMouseLeave={() => setCategoriesOpen(false)}
-                  className="absolute top-full left-0 mt-2 w-64 bg-card border-2 border-border rounded-2xl shadow-xl z-50 overflow-hidden animate-fade-in"
+                  className="absolute top-full left-0 pt-1 w-72 z-50"
                 >
-                  <div className="p-2">
-                    {categories.map((category) => (
+                  <div className="bg-card border-2 border-border rounded-2xl shadow-2xl overflow-hidden animate-fade-in">
+                    <div className="p-2">
+                      {categories.map((category) => {
+                        const IconComponent = getIconComponent(category.icon);
+                        return (
+                          <Link
+                            key={category.id}
+                            to={`/kategori/${category.slug}`}
+                            className="flex items-center gap-3 px-4 py-3.5 text-sm font-bold text-foreground hover:text-primary hover:bg-primary/5 rounded-xl transition-all duration-200 group"
+                            onClick={() => setCategoriesOpen(false)}
+                          >
+                            <div className="p-2 rounded-lg bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-200">
+                              <IconComponent className="h-4 w-4" strokeWidth={2.5} />
+                            </div>
+                            <span>{category.name}</span>
+                          </Link>
+                        );
+                      })}
+                      {categories.length === 0 && (
+                        <div className="px-4 py-3 text-sm text-muted-foreground text-center">
+                          Kategori bulunamadı
+                        </div>
+                      )}
+                    </div>
+                    <div className="border-t border-border bg-muted/30">
                       <Link
-                        key={category.id}
-                        to={`/kategori/${category.slug}`}
-                        className="flex items-center gap-3 px-4 py-3 text-sm font-semibold text-foreground hover:text-primary hover:bg-primary/5 rounded-xl transition-all duration-200"
+                        to="/kategoriler"
+                        className="block px-4 py-3.5 text-sm font-black text-primary hover:bg-primary/5 text-center transition-all duration-200"
                         onClick={() => setCategoriesOpen(false)}
                       >
-                        <span className="text-xl">{category.icon || "📁"}</span>
-                        <span>{category.name}</span>
+                        Tüm Kategoriler →
                       </Link>
-                    ))}
-                    {categories.length === 0 && (
-                      <div className="px-4 py-3 text-sm text-muted-foreground text-center">
-                        Kategori bulunamadı
-                      </div>
-                    )}
-                  </div>
-                  <div className="border-t border-border">
-                    <Link
-                      to="/kategoriler"
-                      className="block px-4 py-3 text-sm font-bold text-primary hover:bg-primary/5 text-center transition-all duration-200"
-                      onClick={() => setCategoriesOpen(false)}
-                    >
-                      Tüm Kategoriler →
-                    </Link>
+                    </div>
                   </div>
                 </div>
               )}
