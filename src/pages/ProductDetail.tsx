@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Helmet } from "react-helmet-async";
 import { ArrowLeft, ExternalLink } from "lucide-react";
+import { SimilarProducts } from "@/components/products/SimilarProducts";
 
 export default function ProductDetail() {
   const { id } = useParams();
@@ -154,6 +155,13 @@ export default function ProductDetail() {
               </div>
             </div>
           </div>
+
+          {/* Benzer Ürünler */}
+          <SimilarProducts
+            currentProductId={product.id}
+            categoryId={product.category_id}
+            tags={product.tags}
+          />
         </div>
       </div>
     </>
