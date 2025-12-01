@@ -16,35 +16,36 @@ export default function Category() {
     sortBy: "newest",
   });
 
+  // Fetch category once when slug changes
   useEffect(() => {
-    if (slug) {
-      fetchCategoryAndProducts();
-    }
+    const fetchCategory = async () => {
+      if (!slug) return;
+      
+      setLoading(true);
+      const { data: categoryData } = await supabase
+        .from("categories")
+        .select("*")
+        .eq("slug", slug)
+        .single();
+
+      setCategory(categoryData);
+      setLoading(false);
+    };
+
+    fetchCategory();
   }, [slug]);
 
+  // Fetch products when category or filters change
   useEffect(() => {
-    if (category) {
-      fetchCategoryAndProducts();
-    }
-  }, [filters, category]);
+    const fetchProducts = async () => {
+      if (!category) return;
 
-  const fetchCategoryAndProducts = async () => {
-    setLoading(true);
-    // Fetch category
-    const { data: categoryData } = await supabase
-      .from("categories")
-      .select("*")
-      .eq("slug", slug)
-      .single();
-
-    if (categoryData) {
-      setCategory(categoryData);
-
-      // Fetch products in this category
+      setLoading(true);
+      
       let query = supabase
         .from("products")
         .select("*, categories(name)")
-        .eq("category_id", categoryData.id);
+        .eq("category_id", category.id);
 
       // Sıralama
       switch (filters.sortBy) {
@@ -76,9 +77,12 @@ export default function Category() {
 
         setProducts(filteredData);
       }
-    }
-    setLoading(false);
-  };
+      
+      setLoading(false);
+    };
+
+    fetchProducts();
+  }, [category, filters]);
 
   const handleFilterChange = (newFilters: FilterState) => {
     setFilters(newFilters);
