@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams, useSearchParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { ProductCard } from "@/components/products/ProductCard";
 import { ProductFilters, FilterState } from "@/components/filters/ProductFilters";
 import { supabase } from "@/lib/supabaseClient";
@@ -7,7 +7,6 @@ import { Helmet } from "react-helmet-async";
 
 export default function Category() {
   const { slug } = useParams();
-  const [searchParams, setSearchParams] = useSearchParams();
   const [category, setCategory] = useState<any>(null);
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -24,22 +23,10 @@ export default function Category() {
   }, [slug]);
 
   useEffect(() => {
-    // URL'den filtreleri yükle
-    const tagsFromUrl = searchParams.getAll("tag");
-    const sortFromUrl = searchParams.get("sort") || "newest";
-
-    setFilters((prev) => ({
-      ...prev,
-      tags: tagsFromUrl,
-      sortBy: sortFromUrl,
-    }));
-  }, []);
-
-  useEffect(() => {
     if (category) {
       fetchCategoryAndProducts();
     }
-  }, [filters]);
+  }, [filters, category]);
 
   const fetchCategoryAndProducts = async () => {
     setLoading(true);
@@ -89,24 +76,13 @@ export default function Category() {
 
         setProducts(filteredData);
       }
-
-      // URL'yi güncelle
-      updateURL(filters);
     }
     setLoading(false);
-  };
-
-  const updateURL = (currentFilters: FilterState) => {
-    const params = new URLSearchParams();
-    if (currentFilters.sortBy !== "newest") params.set("sort", currentFilters.sortBy);
-    currentFilters.tags.forEach((tag) => params.append("tag", tag));
-    setSearchParams(params);
   };
 
   const handleFilterChange = (newFilters: FilterState) => {
     setFilters(newFilters);
   };
-
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
