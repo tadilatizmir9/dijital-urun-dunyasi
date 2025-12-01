@@ -3,8 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import { ProductCard } from "@/components/products/ProductCard";
 import { supabase } from "@/lib/supabaseClient";
 import { Helmet } from "react-helmet-async";
-import { Input } from "@/components/ui/input";
-import { Search as SearchIcon } from "lucide-react";
+import { SearchAutocomplete } from "@/components/search/SearchAutocomplete";
 
 export default function Search() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -35,10 +34,9 @@ export default function Search() {
     setLoading(false);
   };
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      setSearchParams({ q: searchQuery });
+  const handleSearch = (query: string) => {
+    if (query.trim()) {
+      setSearchParams({ q: query });
     }
   };
 
@@ -54,20 +52,15 @@ export default function Search() {
 
       <main className="min-h-screen bg-background py-12">
         <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          {/* Search Bar */}
+          {/* Search Bar with Autocomplete */}
           <div className="mb-8">
-            <form onSubmit={handleSearch} className="max-w-2xl mx-auto">
-              <div className="relative">
-                <SearchIcon className="absolute left-6 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                <Input
-                  type="text"
-                  placeholder="Mockup, şablon, preset ara…"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="h-14 pl-14 pr-4 rounded-full text-base border-2"
-                />
-              </div>
-            </form>
+            <div className="max-w-2xl mx-auto">
+              <SearchAutocomplete
+                value={searchQuery}
+                onChange={setSearchQuery}
+                onSearch={handleSearch}
+              />
+            </div>
           </div>
 
           {/* Results */}
