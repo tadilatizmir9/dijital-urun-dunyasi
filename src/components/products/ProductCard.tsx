@@ -53,13 +53,13 @@ export const ProductCard = ({
           </button>
 
           {/* Image */}
-          <div className="aspect-[4/3] overflow-hidden bg-muted relative">
+          <div className="overflow-hidden bg-muted relative">
           {image_url ? (
             <img
               src={image_url}
               alt={title}
               loading="lazy"
-              className="h-full w-full object-contain transition-all duration-500 group-hover:scale-105 group-hover:opacity-90"
+              className="w-full object-contain transition-all duration-500 group-hover:scale-105 group-hover:opacity-90"
             />
           ) : (
             <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-purple/5 to-secondary/5">

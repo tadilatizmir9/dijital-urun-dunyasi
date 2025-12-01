@@ -82,7 +82,9 @@ export default function Home() {
               <div className="space-y-6">
                 <h1 className="text-5xl sm:text-6xl lg:text-7xl font-black text-foreground leading-[1.1] tracking-tight">
                   İçerik üreticiler için<br />
-                  <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary via-primary to-secondary">seçilmiş premium içerikler</span>
+                  <span className="text-primary">seçilmiş</span>{" "}
+                  <span className="bg-clip-text text-transparent bg-gradient-to-r from-black via-purple-900 to-purple-950 dark:from-white dark:via-purple-300 dark:to-purple-400">premium</span>{" "}
+                  <span className="text-primary">stoklar</span>
                 </h1>
                 <p className="text-xl sm:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed font-medium">
                   Mockup, şablon ve dijital stok içerikleri saniyeler içinde keşfet. 
@@ -124,7 +126,7 @@ export default function Home() {
         </section>
 
         {/* Popular Categories */}
-        <section className="py-20 sm:py-28 bg-muted/30">
+        <section className="py-12 sm:py-16 bg-muted/30">
           <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-16 space-y-4">
               <h2 className="text-4xl sm:text-5xl font-black text-foreground tracking-tight">Popüler Kategoriler</h2>

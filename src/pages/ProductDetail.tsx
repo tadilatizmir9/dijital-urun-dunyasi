@@ -86,12 +86,12 @@ export default function ProductDetail() {
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
             {/* Image */}
-            <div className="aspect-square rounded-3xl overflow-hidden bg-muted">
+            <div className="rounded-3xl overflow-hidden bg-muted">
               {product.image_url ? (
                 <img
                   src={product.image_url}
                   alt={product.title}
-                  className="w-full h-full object-cover"
+                  className="w-full object-contain"
                 />
               ) : (
                 <div className="flex h-full w-full items-center justify-center">
@@ -116,9 +116,11 @@ export default function ProductDetail() {
 
               {/* Description */}
               {product.description && (
-                <p className="text-lg text-muted-foreground leading-relaxed">
-                  {product.description}
-                </p>
+                <div className="text-lg text-muted-foreground leading-relaxed space-y-4">
+                  {product.description.split('\n').map((paragraph, index) => (
+                    paragraph.trim() && <p key={index}>{paragraph}</p>
+                  ))}
+                </div>
               )}
 
             {/* Tags */}
