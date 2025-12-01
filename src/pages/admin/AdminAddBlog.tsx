@@ -4,9 +4,9 @@ import { supabase } from "@/lib/supabaseClient";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
 import { ArrowLeft } from "lucide-react";
+import MDEditor from "@uiw/react-md-editor";
 
 export default function AdminAddBlog() {
   const navigate = useNavigate();
@@ -32,11 +32,28 @@ export default function AdminAddBlog() {
       .replace(/(^-|-$)/g, "");
   };
 
+  const stripMarkdown = (markdown: string) => {
+    return markdown
+      .replace(/[#*`~_>\[\]()]/g, "")
+      .replace(/\n+/g, " ")
+      .trim();
+  };
+
   const handleTitleChange = (title: string) => {
     setFormData({
       ...formData,
       title,
       slug: generateSlug(title),
+    });
+  };
+
+  const handleContentChange = (value: string | undefined) => {
+    const newContent = value || "";
+    setFormData({
+      ...formData,
+      content: newContent,
+      // Excerpt otomatik oluştur (ilk 150 karakter, markdown olmadan)
+      excerpt: stripMarkdown(newContent).substring(0, 150),
     });
   };
 
@@ -73,7 +90,7 @@ export default function AdminAddBlog() {
   };
 
   return (
-    <div className="space-y-6 max-w-2xl">
+    <div className="space-y-6 max-w-5xl">
       <div className="flex items-center gap-4">
         <Button
           variant="ghost"
@@ -85,32 +102,34 @@ export default function AdminAddBlog() {
         </Button>
         <div>
           <h1 className="text-3xl font-bold text-foreground">Yeni Blog Yazısı</h1>
-          <p className="text-muted-foreground">Yeni bir blog yazısı oluşturun</p>
+          <p className="text-muted-foreground">Markdown editör ile yeni bir blog yazısı oluşturun</p>
         </div>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="space-y-2">
-          <Label htmlFor="title">Başlık *</Label>
-          <Input
-            id="title"
-            value={formData.title}
-            onChange={(e) => handleTitleChange(e.target.value)}
-            required
-          />
-        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-2">
+            <Label htmlFor="title">Başlık *</Label>
+            <Input
+              id="title"
+              value={formData.title}
+              onChange={(e) => handleTitleChange(e.target.value)}
+              required
+            />
+          </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="slug">Slug *</Label>
-          <Input
-            id="slug"
-            value={formData.slug}
-            onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
-            required
-          />
-          <p className="text-xs text-muted-foreground">
-            URL'de görünecek: /blog/{formData.slug || "slug"}
-          </p>
+          <div className="space-y-2">
+            <Label htmlFor="slug">Slug *</Label>
+            <Input
+              id="slug"
+              value={formData.slug}
+              onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
+              required
+            />
+            <p className="text-xs text-muted-foreground">
+              URL'de görünecek: /blog/{formData.slug || "slug"}
+            </p>
+          </div>
         </div>
 
         <div className="space-y-2">
@@ -124,27 +143,37 @@ export default function AdminAddBlog() {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="excerpt">Özet</Label>
-          <Textarea
+          <Label htmlFor="excerpt">Özet (otomatik oluşturulur)</Label>
+          <Input
             id="excerpt"
             value={formData.excerpt}
             onChange={(e) => setFormData({ ...formData, excerpt: e.target.value })}
-            rows={3}
+            placeholder="İçerikten otomatik oluşturulacak..."
           />
+          <p className="text-xs text-muted-foreground">
+            İçeriğin ilk 150 karakteri otomatik olarak özet olarak kullanılır.
+          </p>
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="content">İçerik *</Label>
-          <Textarea
-            id="content"
+        <div className="space-y-2" data-color-mode="light">
+          <Label>İçerik * (Markdown)</Label>
+          <MDEditor
             value={formData.content}
-            onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-            rows={12}
-            required
+            onChange={handleContentChange}
+            height={500}
+            preview="live"
+            highlightEnable={true}
           />
+          <p className="text-xs text-muted-foreground">
+            Markdown formatında içerik yazabilirsiniz. Sağ tarafta önizleme görünecektir.
+          </p>
         </div>
 
-        <Button type="submit" disabled={loading} className="w-full">
+        <Button 
+          type="submit" 
+          disabled={loading} 
+          className="w-full bg-purple hover:bg-purple/90"
+        >
           {loading ? "Ekleniyor..." : "Blog Yazısı Ekle"}
         </Button>
       </form>

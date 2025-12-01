@@ -4,6 +4,9 @@ import { supabase } from "@/lib/supabaseClient";
 import { Helmet } from "react-helmet-async";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
+import ReactMarkdown from "react-markdown";
+import rehypeHighlight from "rehype-highlight";
+import "highlight.js/styles/github-dark.css";
 
 export default function BlogPost() {
   const { slug } = useParams();
@@ -104,12 +107,11 @@ export default function BlogPost() {
             </p>
           )}
 
-          {/* Content */}
-          <div className="prose prose-lg max-w-none">
-            <div
-              className="text-foreground leading-relaxed whitespace-pre-wrap"
-              dangerouslySetInnerHTML={{ __html: post.content }}
-            />
+          {/* Markdown Content */}
+          <div className="prose prose-lg max-w-none prose-headings:font-bold prose-h1:text-4xl prose-h2:text-3xl prose-h3:text-2xl prose-p:text-foreground prose-a:text-purple prose-a:no-underline hover:prose-a:underline prose-strong:text-foreground prose-code:text-purple prose-code:bg-muted prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-pre:bg-card prose-pre:border prose-pre:border-border prose-img:rounded-2xl">
+            <ReactMarkdown rehypePlugins={[rehypeHighlight]}>
+              {post.content}
+            </ReactMarkdown>
           </div>
         </article>
       </div>
