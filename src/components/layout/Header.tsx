@@ -156,11 +156,6 @@ export const Header = () => {
                 <Search className="h-5 w-5" />
               </Button>
             </Link>
-            <Link to="/admin">
-              <Button variant="outline" className="rounded-full font-semibold border-2 hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all duration-200">
-                Yönetici
-              </Button>
-            </Link>
           </div>
         </div>
       </div>
