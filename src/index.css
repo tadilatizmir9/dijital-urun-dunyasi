@@ -17,16 +17,16 @@ All colors MUST be HSL.
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 5%;
 
-    --primary: 180 85% 45%;
+    --primary: 142 76% 36%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 24 100% 50%;
+    --secondary: 24 95% 53%;
     --secondary-foreground: 0 0% 100%;
 
     --muted: 0 0% 96%;
     --muted-foreground: 0 0% 40%;
 
-    --accent: 280 100% 50%;
+    --accent: 142 76% 36%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%;
@@ -34,25 +34,25 @@ All colors MUST be HSL.
 
     --border: 0 0% 90%;
     --input: 0 0% 90%;
-    --ring: 180 85% 45%;
+    --ring: 142 76% 36%;
 
     --radius: 1.5rem;
 
     /* Modern Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(180 85% 45%) 0%, hsl(190 85% 50%) 100%);
-    --gradient-secondary: linear-gradient(135deg, hsl(24 100% 50%) 0%, hsl(34 100% 55%) 100%);
+    --gradient-primary: linear-gradient(135deg, hsl(142 76% 36%) 0%, hsl(142 71% 45%) 100%);
+    --gradient-secondary: linear-gradient(135deg, hsl(24 95% 53%) 0%, hsl(34 95% 60%) 100%);
     --gradient-hero: linear-gradient(180deg, hsl(0 0% 98%) 0%, hsl(0 0% 100%) 100%);
-    --gradient-mesh: radial-gradient(at 40% 20%, hsl(180 85% 45% / 0.08) 0px, transparent 50%),
-                     radial-gradient(at 80% 0%, hsl(24 100% 50% / 0.06) 0px, transparent 50%),
-                     radial-gradient(at 0% 50%, hsl(180 85% 45% / 0.05) 0px, transparent 50%);
+    --gradient-mesh: radial-gradient(at 40% 20%, hsl(142 76% 36% / 0.08) 0px, transparent 50%),
+                     radial-gradient(at 80% 0%, hsl(24 95% 53% / 0.06) 0px, transparent 50%),
+                     radial-gradient(at 0% 50%, hsl(142 76% 36% / 0.05) 0px, transparent 50%);
 
     /* Modern Shadows */
     --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
     --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
     --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
     --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
-    --shadow-primary: 0 10px 30px -10px hsl(180 85% 45% / 0.2);
-    --shadow-glow: 0 0 40px hsl(180 85% 45% / 0.15);
+    --shadow-primary: 0 10px 30px -10px hsl(142 76% 36% / 0.2);
+    --shadow-glow: 0 0 40px hsl(142 76% 36% / 0.15);
 
     --sidebar-background: 0 0% 100%;
     --sidebar-foreground: 222 47% 11%;
