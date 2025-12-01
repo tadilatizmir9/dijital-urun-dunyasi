@@ -135,21 +135,23 @@ export default function ProductDetail() {
               )}
 
               {/* CTA Button */}
-              {redirect ? (
-                <Link to={`/go/${redirect.slug}`}>
-                  <Button size="lg" className="w-full rounded-full text-lg h-14">
-                    Orijinal Sitede Gör / İndir
-                    <ExternalLink className="ml-2 h-5 w-5" />
-                  </Button>
-                </Link>
-              ) : (
-                <a href={product.affiliate_url} target="_blank" rel="noopener noreferrer">
-                  <Button size="lg" className="w-full rounded-full text-lg h-14">
-                    Orijinal Sitede Gör / İndir
-                    <ExternalLink className="ml-2 h-5 w-5" />
-                  </Button>
-                </a>
-              )}
+              <div className="pt-4">
+                {redirect ? (
+                  <Link to={`/go/${redirect.slug}`}>
+                    <Button size="lg" className="w-full rounded-full text-lg h-14">
+                      Orijinal Sitede Gör / İndir
+                      <ExternalLink className="ml-2 h-5 w-5" />
+                    </Button>
+                  </Link>
+                ) : (
+                  <a href={product.affiliate_url} target="_blank" rel="noopener noreferrer">
+                    <Button size="lg" className="w-full rounded-full text-lg h-14">
+                      Orijinal Sitede Gör / İndir
+                      <ExternalLink className="ml-2 h-5 w-5" />
+                    </Button>
+                  </a>
+                )}
+              </div>
             </div>
           </div>
         </div>

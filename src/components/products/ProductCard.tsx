@@ -71,11 +71,13 @@ export const ProductCard = ({
         )}
 
         {/* Button */}
-        <Link to={`/urun/${id}`}>
-          <Button className="w-full rounded-full font-semibold gradient-primary hover:shadow-glow transition-all duration-300" size="sm">
-            İncele
-          </Button>
-        </Link>
+        <div className="pt-2">
+          <Link to={`/urun/${id}`}>
+            <Button className="w-full rounded-full font-semibold gradient-primary hover:shadow-glow transition-all duration-300" size="sm">
+              İncele
+            </Button>
+          </Link>
+        </div>
       </div>
     </div>
   );
