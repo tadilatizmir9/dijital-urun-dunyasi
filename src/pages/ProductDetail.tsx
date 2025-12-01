@@ -85,17 +85,30 @@ export default function ProductDetail() {
           </Link>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-            {/* Image */}
-            <div className="rounded-3xl overflow-hidden bg-muted">
-              {product.image_url ? (
-                <img
-                  src={product.image_url}
-                  alt={product.title}
-                  className="w-full object-contain"
-                />
-              ) : (
-                <div className="flex h-full w-full items-center justify-center">
-                  <span className="text-8xl">📦</span>
+            {/* Images */}
+            <div className="space-y-4">
+              <div className="rounded-3xl overflow-hidden bg-muted">
+                {product.image_url ? (
+                  <img
+                    src={product.image_url}
+                    alt={product.title}
+                    className="w-full object-contain"
+                  />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center">
+                    <span className="text-8xl">📦</span>
+                  </div>
+                )}
+              </div>
+              
+              {/* Second Image */}
+              {product.image_url_2 && (
+                <div className="rounded-3xl overflow-hidden bg-muted">
+                  <img
+                    src={product.image_url_2}
+                    alt={`${product.title} - 2`}
+                    className="w-full object-contain"
+                  />
                 </div>
               )}
             </div>

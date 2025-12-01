@@ -27,6 +27,7 @@ export default function AdminAddProduct() {
     title: "",
     description: "",
     image_url: "",
+    image_url_2: "",
     category_id: "",
     subcategory_id: "",
     tags: "",
@@ -82,6 +83,7 @@ export default function AdminAddProduct() {
         title: data.title,
         description: data.description || "",
         image_url: data.image_url || "",
+        image_url_2: data.image_url_2 || "",
         category_id: data.category_id || "",
         subcategory_id: data.subcategory_id || "",
         tags: data.tags ? data.tags.join(", ") : "",
@@ -122,6 +124,7 @@ export default function AdminAddProduct() {
             title: formData.title,
             description: formData.description,
             image_url: formData.image_url,
+            image_url_2: formData.image_url_2,
             category_id: formData.category_id || null,
             subcategory_id: formData.subcategory_id || null,
             tags: formData.tags
@@ -153,6 +156,7 @@ export default function AdminAddProduct() {
             title: formData.title,
             description: formData.description,
             image_url: formData.image_url,
+            image_url_2: formData.image_url_2,
             category_id: formData.category_id || null,
             subcategory_id: formData.subcategory_id || null,
             tags: formData.tags
@@ -248,6 +252,16 @@ export default function AdminAddProduct() {
             type="url"
             value={formData.image_url}
             onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="image_url_2">İkinci Görsel URL (Opsiyonel)</Label>
+          <Input
+            id="image_url_2"
+            type="url"
+            value={formData.image_url_2}
+            onChange={(e) => setFormData({ ...formData, image_url_2: e.target.value })}
           />
         </div>
 
