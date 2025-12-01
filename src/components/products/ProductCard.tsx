@@ -59,7 +59,7 @@ export const ProductCard = ({
               src={image_url}
               alt={title}
               loading="lazy"
-              className="h-full w-full object-cover transition-all duration-500 group-hover:scale-105 group-hover:opacity-90"
+              className="h-full w-full object-contain transition-all duration-500 group-hover:scale-105 group-hover:opacity-90"
             />
           ) : (
             <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-purple/5 to-secondary/5">
