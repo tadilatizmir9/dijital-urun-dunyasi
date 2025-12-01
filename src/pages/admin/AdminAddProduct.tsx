@@ -22,11 +22,13 @@ export default function AdminAddProduct() {
   const isEditMode = !!id;
   const [loading, setLoading] = useState(false);
   const [categories, setCategories] = useState<any[]>([]);
+  const [subcategories, setSubcategories] = useState<any[]>([]);
   const [formData, setFormData] = useState({
     title: "",
     description: "",
     image_url: "",
     category_id: "",
+    subcategory_id: "",
     tags: "",
     affiliate_url: "",
   });
@@ -41,6 +43,19 @@ export default function AdminAddProduct() {
   const fetchCategories = async () => {
     const { data } = await supabase.from("categories").select("*").order("name");
     if (data) setCategories(data);
+  };
+
+  const fetchSubcategories = async (categoryId: string) => {
+    if (!categoryId) {
+      setSubcategories([]);
+      return;
+    }
+    const { data } = await supabase
+      .from("subcategories")
+      .select("*")
+      .eq("parent_category_id", categoryId)
+      .order("name");
+    if (data) setSubcategories(data);
   };
 
   const fetchProduct = async () => {
@@ -68,9 +83,15 @@ export default function AdminAddProduct() {
         description: data.description || "",
         image_url: data.image_url || "",
         category_id: data.category_id || "",
+        subcategory_id: data.subcategory_id || "",
         tags: data.tags ? data.tags.join(", ") : "",
         affiliate_url: data.affiliate_url,
       });
+      
+      // Alt kategorileri yükle
+      if (data.category_id) {
+        fetchSubcategories(data.category_id);
+      }
     }
   };
 
@@ -102,6 +123,7 @@ export default function AdminAddProduct() {
             description: formData.description,
             image_url: formData.image_url,
             category_id: formData.category_id || null,
+            subcategory_id: formData.subcategory_id || null,
             tags: formData.tags
               ? formData.tags.split(",").map((t) => t.trim()).filter(Boolean)
               : [],
@@ -132,6 +154,7 @@ export default function AdminAddProduct() {
             description: formData.description,
             image_url: formData.image_url,
             category_id: formData.category_id || null,
+            subcategory_id: formData.subcategory_id || null,
             tags: formData.tags
               ? formData.tags.split(",").map((t) => t.trim()).filter(Boolean)
               : [],
@@ -232,7 +255,10 @@ export default function AdminAddProduct() {
           <Label htmlFor="category">Kategori</Label>
           <Select
             value={formData.category_id}
-            onValueChange={(value) => setFormData({ ...formData, category_id: value })}
+            onValueChange={(value) => {
+              setFormData({ ...formData, category_id: value, subcategory_id: "" });
+              fetchSubcategories(value);
+            }}
           >
             <SelectTrigger>
               <SelectValue placeholder="Kategori seçin" />
@@ -246,6 +272,29 @@ export default function AdminAddProduct() {
             </SelectContent>
           </Select>
         </div>
+
+        {/* Alt Kategori Seçimi */}
+        {formData.category_id && subcategories.length > 0 && (
+          <div className="space-y-2">
+            <Label htmlFor="subcategory">Alt Kategori (Opsiyonel)</Label>
+            <Select
+              value={formData.subcategory_id}
+              onValueChange={(value) => setFormData({ ...formData, subcategory_id: value })}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Alt kategori seçin" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">Yok</SelectItem>
+                {subcategories.map((subcategory) => (
+                  <SelectItem key={subcategory.id} value={subcategory.id}>
+                    {subcategory.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
 
         <div className="space-y-2">
           <Label htmlFor="tags">Etiketler (virgülle ayırın)</Label>
