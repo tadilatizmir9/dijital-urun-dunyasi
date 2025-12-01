@@ -1,7 +1,8 @@
 import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Heart } from "lucide-react";
+import { useFavorites } from "@/hooks/useFavorites";
 
 interface ProductCardProps {
   id: string;
@@ -20,14 +21,39 @@ export const ProductCard = ({
   tags,
   category,
 }: ProductCardProps) => {
+  const { isFavorite, toggleFavorite } = useFavorites();
+  const favorite = isFavorite(id);
+
+  const handleFavoriteClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    toggleFavorite(id);
+  };
+
   return (
-    <Link 
-      to={`/urun/${id}`}
-      className="group block"
-    >
-      <div className="relative overflow-hidden rounded-2xl bg-card border border-border transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:border-purple/50">
-        {/* Image */}
-        <div className="aspect-[4/3] overflow-hidden bg-muted relative">
+    <div className="group block relative">
+      <Link 
+        to={`/urun/${id}`}
+        className="block"
+      >
+        <div className="relative overflow-hidden rounded-2xl bg-card border border-border transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:border-purple/50">
+          {/* Favorite Button */}
+          <button
+            onClick={handleFavoriteClick}
+            className="absolute top-3 right-3 z-10 bg-white/80 backdrop-blur-sm rounded-full p-2 shadow hover:bg-white hover:scale-110 transition-all duration-200 group/fav"
+            aria-label={favorite ? "Favorilerden çıkar" : "Favorilere ekle"}
+          >
+            <Heart 
+              className={`h-5 w-5 transition-all duration-200 ${
+                favorite 
+                  ? 'text-red-500 fill-red-500' 
+                  : 'text-muted-foreground group-hover/fav:text-red-500'
+              }`}
+            />
+          </button>
+
+          {/* Image */}
+          <div className="aspect-[4/3] overflow-hidden bg-muted relative">
           {image_url ? (
             <img
               src={image_url}
@@ -87,7 +113,8 @@ export const ProductCard = ({
             </Button>
           </div>
         </div>
-      </div>
-    </Link>
+        </div>
+      </Link>
+    </div>
   );
 };
