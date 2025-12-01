@@ -67,11 +67,11 @@ export default function Home() {
         <title>Dijitalstok – Mockup, şablon ve dijital stok içerik kataloğu</title>
         <meta
           name="description"
-          content="Dijital yaratıcılar için seçilmiş mockup, şablon ve stok içerikler. Aradığın dijital içeriği saniyeler içinde keşfet."
+          content="Dijitalstok, mockup, Canva şablonları, presetler, icon setleri ve yaratıcı dijital stok içeriklerini bir arada keşfedebileceğiniz ücretsiz bir katalogdur."
         />
       </Helmet>
 
-      <div className="min-h-screen bg-background">
+      <main className="min-h-screen bg-background">
         {/* Hero Section */}
         <section className="relative overflow-hidden py-24 sm:py-32 lg:py-40">
           {/* Gradient Mesh Background */}
@@ -256,7 +256,7 @@ export default function Home() {
                 <div className="hidden lg:flex justify-center">
                   <img
                     src={newsletterImage}
-                    alt="Newsletter"
+                    alt="Dijitalstok newsletter görseli"
                     className="w-full max-w-md object-contain drop-shadow-2xl"
                   />
                 </div>
@@ -264,7 +264,7 @@ export default function Home() {
             </div>
           </div>
         </section>
-      </div>
+      </main>
     </>
   );
 }

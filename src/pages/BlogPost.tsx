@@ -59,11 +59,11 @@ export default function BlogPost() {
         <title>{post.title} – Dijitalstok Blog</title>
         <meta
           name="description"
-          content={post.excerpt || post.title}
+          content={post.excerpt || post.content?.substring(0, 150) || post.title}
         />
       </Helmet>
 
-      <div className="min-h-screen bg-background py-12">
+      <main className="min-h-screen bg-background py-12">
         <article className="container mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
           {/* Back Button */}
           <Link to="/blog">
@@ -113,8 +113,30 @@ export default function BlogPost() {
               {post.content}
             </ReactMarkdown>
           </div>
+
+          {/* Dahili Linkleme - Daha Fazla İçerik Keşfet */}
+          <section className="mt-16 pt-8 border-t border-border">
+            <div className="bg-muted/50 rounded-2xl p-8 space-y-6">
+              <h2 className="text-2xl font-bold text-foreground">Daha Fazla İçerik Keşfet</h2>
+              <p className="text-muted-foreground">
+                Dijital yaratıcılar için seçilmiş premium içerikleri incelemek ister misin?
+              </p>
+              <div className="flex flex-wrap gap-4">
+                <Link to="/urunler">
+                  <Button size="lg" className="rounded-full">
+                    Tüm Ürünleri Görüntüle
+                  </Button>
+                </Link>
+                <Link to="/#kategoriler">
+                  <Button size="lg" variant="outline" className="rounded-full">
+                    Popüler Kategorilere Göz At
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </section>
         </article>
-      </div>
+      </main>
     </>
   );
 }

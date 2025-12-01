@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/table";
 import { Trash2, Pencil, X, Check } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { Helmet } from "react-helmet-async";
 
 export default function AdminCategories() {
   const [categories, setCategories] = useState<any[]>([]);
@@ -161,7 +162,12 @@ export default function AdminCategories() {
   };
 
   return (
-    <div className="space-y-8">
+    <>
+      <Helmet>
+        <title>Kategori Yönetimi – Admin – Dijitalstok</title>
+      </Helmet>
+
+      <div className="space-y-8">
       <div>
         <h1 className="text-3xl font-bold text-foreground">Kategoriler</h1>
         <p className="text-muted-foreground">Kategori ekleyin ve yönetin</p>
@@ -304,5 +310,6 @@ export default function AdminCategories() {
         )}
       </div>
     </div>
+    </>
   );
 }

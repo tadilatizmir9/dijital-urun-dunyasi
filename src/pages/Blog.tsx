@@ -29,18 +29,18 @@ export default function Blog() {
         <title>Blog – Dijitalstok</title>
         <meta
           name="description"
-          content="Dijital içerikler, tasarım ve yaratıcılık hakkında yazılar."
+          content="Dijital ürünler, tasarım kaynakları ve içerik üretimi üzerine yazılar – Dijitalstok Blog."
         />
       </Helmet>
 
-      <div className="min-h-screen bg-background py-12">
+      <main className="min-h-screen bg-background py-12">
         <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="mb-8">
+          <header className="mb-8">
             <h1 className="text-4xl font-bold text-foreground mb-2">Blog</h1>
             <p className="text-lg text-muted-foreground">
               Dijital içerikler ve tasarım hakkında yazılar
             </p>
-          </div>
+          </header>
 
           {loading ? (
             <div className="text-center py-12">
@@ -65,7 +65,7 @@ export default function Blog() {
             </div>
           )}
         </div>
-      </div>
+      </main>
     </>
   );
 }

@@ -111,14 +111,14 @@ export default function Products() {
   return (
     <>
       <Helmet>
-        <title>Tüm Ürünler – Dijitalstok</title>
+        <title>Tüm dijital ürünler – Dijitalstok</title>
         <meta
           name="description"
-          content="Mockup, şablon, preset ve daha fazlası. Dijital ürün kataloğumuzu keşfedin."
+          content="Mockup, şablon, preset, icon pack ve daha fazlasını içeren tüm dijital ürünleri Dijitalstok üzerinde keşfedin."
         />
       </Helmet>
 
-      <div className="min-h-screen bg-background py-12">
+      <main className="min-h-screen bg-background py-12">
         <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="mb-8">
             <h1 className="text-4xl font-bold text-foreground mb-2">Tüm Ürünler</h1>
@@ -173,7 +173,7 @@ export default function Products() {
             </>
           )}
         </div>
-      </div>
+      </main>
     </>
   );
 }

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Package, BookOpen, FolderOpen, MousePointerClick } from "lucide-react";
+import { Helmet } from "react-helmet-async";
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState({
@@ -61,7 +62,12 @@ export default function AdminDashboard() {
   ];
 
   return (
-    <div className="space-y-8">
+    <>
+      <Helmet>
+        <title>Admin Dashboard – Dijitalstok</title>
+      </Helmet>
+
+      <div className="space-y-8">
       <div>
         <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
         <p className="text-muted-foreground">Genel istatistikler</p>
@@ -83,5 +89,6 @@ export default function AdminDashboard() {
         ))}
       </div>
     </div>
+    </>
   );
 }
