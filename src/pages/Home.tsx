@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, Mail } from "lucide-react";
+import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/products/ProductCard";
@@ -229,14 +229,9 @@ export default function Home() {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
                 {/* Content */}
                 <div className="space-y-6 text-white">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-14 w-14 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm">
-                      <Mail className="h-7 w-7 text-white" />
-                    </div>
-                    <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold">
-                      Haftanın En İyi Dijital Ürünleri
-                    </h2>
-                  </div>
+                  <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold">
+                    Haftanın En İyi Dijital Ürünleri
+                  </h2>
                   <p className="text-xl text-white/95 leading-relaxed">
                     Ücretsiz mail olarak almak ister misin? Hemen abone ol, hiçbir fırsatı kaçırma!
                   </p>
@@ -262,7 +257,7 @@ export default function Home() {
                   <img
                     src={newsletterImage}
                     alt="Newsletter"
-                    className="w-full max-w-lg object-contain drop-shadow-2xl"
+                    className="w-full max-w-md object-contain drop-shadow-2xl"
                   />
                 </div>
               </div>
