@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search } from "lucide-react";
+import { Search, Mail } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/products/ProductCard";
@@ -8,6 +8,7 @@ import { BlogCard } from "@/components/blog/BlogCard";
 import { CategoryCard } from "@/components/categories/CategoryCard";
 import { supabase } from "@/lib/supabaseClient";
 import { Helmet } from "react-helmet-async";
+import newsletterImage from "@/assets/newsletter-hero.png";
 
 export default function Home() {
   const navigate = useNavigate();
@@ -224,33 +225,46 @@ export default function Home() {
         {/* Newsletter CTA */}
         <section className="py-20 sm:py-28">
           <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="relative overflow-hidden rounded-3xl gradient-primary p-12 sm:p-16 text-center shadow-primary">
-              {/* Decorative elements */}
-              <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl" />
-              <div className="absolute bottom-0 left-0 w-64 h-64 bg-white/10 rounded-full blur-3xl" />
-              
-              <div className="relative z-10 space-y-6">
-                <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-primary-foreground">
-                  Haftanın En İyi Dijital Ürünleri
-                </h2>
-                <p className="text-xl text-primary-foreground/95 max-w-2xl mx-auto">
-                  Ücretsiz mail olarak almak ister misin? Hemen abone ol, hiçbir fırsatı kaçırma!
-                </p>
-                <form className="max-w-lg mx-auto flex flex-col sm:flex-row gap-3 pt-4">
-                  <Input
-                    type="email"
-                    placeholder="E-posta adresin"
-                    className="h-14 rounded-full bg-white/20 border-white/30 text-primary-foreground placeholder:text-primary-foreground/70 backdrop-blur-sm text-lg"
+            <div className="relative overflow-hidden rounded-3xl bg-primary p-12 sm:p-16 shadow-2xl">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                {/* Content */}
+                <div className="space-y-6 text-white">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-14 w-14 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm">
+                      <Mail className="h-7 w-7 text-white" />
+                    </div>
+                    <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold">
+                      Haftanın En İyi Dijital Ürünleri
+                    </h2>
+                  </div>
+                  <p className="text-xl text-white/95 leading-relaxed">
+                    Ücretsiz mail olarak almak ister misin? Hemen abone ol, hiçbir fırsatı kaçırma!
+                  </p>
+                  <form className="flex flex-col sm:flex-row gap-3 pt-4">
+                    <Input
+                      type="email"
+                      placeholder="E-posta adresin"
+                      className="h-14 rounded-full bg-white/20 border-white/30 text-white placeholder:text-white/70 backdrop-blur-sm text-lg focus:bg-white/30 transition-colors"
+                    />
+                    <Button 
+                      type="submit" 
+                      size="lg" 
+                      variant="secondary" 
+                      className="rounded-full h-14 px-8 font-semibold bg-secondary text-secondary-foreground hover:bg-secondary/90 hover:shadow-lg transition-all duration-300 whitespace-nowrap"
+                    >
+                      Abone Ol
+                    </Button>
+                  </form>
+                </div>
+                
+                {/* Image */}
+                <div className="hidden lg:flex justify-center">
+                  <img
+                    src={newsletterImage}
+                    alt="Newsletter"
+                    className="w-full max-w-lg object-contain drop-shadow-2xl"
                   />
-                  <Button 
-                    type="submit" 
-                    size="lg" 
-                    variant="secondary" 
-                    className="rounded-full h-14 px-8 font-semibold gradient-secondary hover:shadow-lg transition-all duration-300"
-                  >
-                    Abone Ol
-                  </Button>
-                </form>
+                </div>
               </div>
             </div>
           </div>
