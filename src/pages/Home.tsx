@@ -79,13 +79,13 @@ export default function Home() {
           <div className="container relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="text-center space-y-10 animate-fade-in-up">
               <div className="space-y-6">
-                <h1 className="text-5xl sm:text-6xl lg:text-7xl font-extrabold text-foreground leading-tight">
+                <h1 className="text-5xl sm:text-6xl lg:text-7xl font-black text-foreground leading-[1.1] tracking-tight">
                   Dijital yaratıcılar için<br />
-                  <span className="text-gradient">seçilmiş premium içerikler</span>
+                  <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary via-primary to-secondary">seçilmiş premium içerikler</span>
                 </h1>
-                <p className="text-xl sm:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+                <p className="text-xl sm:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed font-medium">
                   Mockup, şablon ve dijital stok içerikleri saniyeler içinde keşfet. 
-                  <span className="text-foreground font-semibold"> En kaliteli kaynaklar, tek yerde.</span>
+                  <span className="text-foreground font-bold"> En kaliteli kaynaklar, tek yerde.</span>
                 </p>
               </div>
 
@@ -133,22 +133,21 @@ export default function Home() {
         </section>
 
         {/* Popular Categories */}
-        <section className="py-20 sm:py-28">
+        <section className="py-20 sm:py-28 bg-muted/30">
           <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-12 space-y-3">
-              <h2 className="text-4xl sm:text-5xl font-extrabold text-foreground">Popüler Kategoriler</h2>
-              <p className="text-lg text-muted-foreground">İhtiyacın olan içeriği hızlıca bul</p>
+            <div className="text-center mb-16 space-y-4">
+              <h2 className="text-4xl sm:text-5xl font-black text-foreground tracking-tight">Popüler Kategoriler</h2>
+              <p className="text-xl text-muted-foreground">Aradığın her şey burada</p>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {categories.map((category, index) => (
-                <div key={category.id} className="animate-fade-in" style={{ animationDelay: `${index * 0.1}s` }}>
-                  <CategoryCard
-                    name={category.name}
-                    slug={category.slug}
-                    icon={category.icon}
-                    description={`${category.name} kategorisindeki tüm dijital içerikleri keşfet`}
-                  />
-                </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              {categories.map((category) => (
+                <CategoryCard
+                  key={category.id}
+                  name={category.name}
+                  slug={category.slug}
+                  icon={category.icon}
+                  description={`${category.name} kategorisindeki tüm dijital içerikleri keşfet`}
+                />
               ))}
             </div>
           </div>
