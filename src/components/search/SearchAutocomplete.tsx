@@ -44,28 +44,13 @@ export const SearchAutocomplete = ({ value, onChange, onSearch }: SearchAutocomp
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Fetch suggestions with debounce
+  // Input değeri değiştiğinde listeyi resetle
   useEffect(() => {
-    if (debounceRef.current) {
-      clearTimeout(debounceRef.current);
-    }
-
     if (!value.trim() || value.length < 2) {
       setProducts([]);
       setCategories([]);
       setIsOpen(false);
-      return;
     }
-
-    debounceRef.current = setTimeout(() => {
-      fetchSuggestions(value);
-    }, 300);
-
-    return () => {
-      if (debounceRef.current) {
-        clearTimeout(debounceRef.current);
-      }
-    };
   }, [value]);
 
   const fetchSuggestions = async (searchTerm: string) => {
@@ -116,9 +101,18 @@ export const SearchAutocomplete = ({ value, onChange, onSearch }: SearchAutocomp
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onChange(e.target.value);
-  };
+    const nextValue = e.target.value;
+    console.log('Search input changed:', nextValue);
+    onChange(nextValue);
 
+    if (nextValue.trim().length >= 2) {
+      fetchSuggestions(nextValue);
+    } else {
+      setProducts([]);
+      setCategories([]);
+      setIsOpen(false);
+    }
+  };
   const showSuggestions = isOpen && (products.length > 0 || categories.length > 0 || loading);
 
   return (
