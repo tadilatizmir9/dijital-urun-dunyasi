@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/products/ProductCard";
 import { BlogCard } from "@/components/blog/BlogCard";
 import { CategoryCard } from "@/components/categories/CategoryCard";
+import { SearchAutocomplete } from "@/components/search/SearchAutocomplete";
 import { supabase } from "@/lib/supabaseClient";
 import { Helmet } from "react-helmet-async";
 import newsletterImage from "@/assets/newsletter-hero.png";
@@ -54,10 +55,9 @@ export default function Home() {
     if (blogData) setBlogPosts(blogData);
   };
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      navigate(`/arama?q=${encodeURIComponent(searchQuery)}`);
+  const handleSearch = (query: string) => {
+    if (query.trim()) {
+      navigate(`/arama?q=${encodeURIComponent(query)}`);
     }
   };
 
@@ -90,29 +90,19 @@ export default function Home() {
                 </p>
               </div>
 
-              {/* Search Bar */}
-              <form onSubmit={handleSearch} className="max-w-3xl mx-auto">
+              {/* Search Bar with Autocomplete */}
+              <div className="max-w-3xl mx-auto">
                 <div className="relative group">
                   <div className="absolute inset-0 bg-primary/20 rounded-full blur-2xl group-hover:bg-primary/30 transition-all duration-300" />
-                  <div className="relative flex items-center bg-card rounded-full border-2 border-border hover:border-primary/50 transition-all duration-300 shadow-xl">
-                    <Search className="absolute left-6 h-6 w-6 text-muted-foreground" />
-                    <Input
-                      type="text"
-                      placeholder="Mockup, şablon, preset ara…"
+                  <div className="relative">
+                    <SearchAutocomplete
                       value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="h-16 pl-16 pr-32 rounded-full text-lg border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+                      onChange={setSearchQuery}
+                      onSearch={handleSearch}
                     />
-                    <Button 
-                      type="submit" 
-                      size="lg" 
-                      className="absolute right-2 rounded-full gradient-primary hover:shadow-glow transition-all duration-300"
-                    >
-                      Ara
-                    </Button>
                   </div>
                 </div>
-              </form>
+              </div>
 
               {/* Quick Stats */}
               <div className="flex flex-wrap justify-center gap-8 pt-8">
