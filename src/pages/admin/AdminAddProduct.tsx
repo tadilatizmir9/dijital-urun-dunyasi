@@ -285,7 +285,7 @@ export default function AdminAddProduct() {
                 <SelectValue placeholder="Alt kategori seçin" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Yok</SelectItem>
+                <SelectItem value="none">Yok</SelectItem>
                 {subcategories.map((subcategory) => (
                   <SelectItem key={subcategory.id} value={subcategory.id}>
                     {subcategory.name}
