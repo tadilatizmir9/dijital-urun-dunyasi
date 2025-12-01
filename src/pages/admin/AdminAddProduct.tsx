@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/lib/supabaseClient";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,6 +17,8 @@ import { ArrowLeft } from "lucide-react";
 
 export default function AdminAddProduct() {
   const navigate = useNavigate();
+  const { id } = useParams();
+  const isEditMode = !!id;
   const [loading, setLoading] = useState(false);
   const [categories, setCategories] = useState<any[]>([]);
   const [formData, setFormData] = useState({
@@ -30,11 +32,45 @@ export default function AdminAddProduct() {
 
   useEffect(() => {
     fetchCategories();
-  }, []);
+    if (isEditMode) {
+      fetchProduct();
+    }
+  }, [id]);
 
   const fetchCategories = async () => {
     const { data } = await supabase.from("categories").select("*").order("name");
     if (data) setCategories(data);
+  };
+
+  const fetchProduct = async () => {
+    if (!id) return;
+    
+    const { data, error } = await supabase
+      .from("products")
+      .select("*")
+      .eq("id", id)
+      .single();
+
+    if (error) {
+      toast({
+        variant: "destructive",
+        title: "Hata",
+        description: "Ürün yüklenemedi.",
+      });
+      navigate("/admin/urunler");
+      return;
+    }
+
+    if (data) {
+      setFormData({
+        title: data.title,
+        description: data.description || "",
+        image_url: data.image_url || "",
+        category_id: data.category_id || "",
+        tags: data.tags ? data.tags.join(", ") : "",
+        affiliate_url: data.affiliate_url,
+      });
+    }
   };
 
   const generateSlug = (title: string) => {
@@ -56,46 +92,78 @@ export default function AdminAddProduct() {
     setLoading(true);
 
     try {
-      // Insert product
-      const { data: product, error: productError } = await supabase
-        .from("products")
-        .insert({
-          title: formData.title,
-          description: formData.description,
-          image_url: formData.image_url,
-          category_id: formData.category_id || null,
-          tags: formData.tags
-            ? formData.tags.split(",").map((t) => t.trim()).filter(Boolean)
-            : [],
-          affiliate_url: formData.affiliate_url,
-        })
-        .select()
-        .single();
+      if (isEditMode) {
+        // Update product
+        const { error: productError } = await supabase
+          .from("products")
+          .update({
+            title: formData.title,
+            description: formData.description,
+            image_url: formData.image_url,
+            category_id: formData.category_id || null,
+            tags: formData.tags
+              ? formData.tags.split(",").map((t) => t.trim()).filter(Boolean)
+              : [],
+            affiliate_url: formData.affiliate_url,
+          })
+          .eq("id", id);
 
-      if (productError) throw productError;
+        if (productError) throw productError;
 
-      // Insert redirect
-      const slug = generateSlug(formData.title);
-      const { error: redirectError } = await supabase.from("redirects").insert({
-        product_id: product.id,
-        slug: slug,
-        target_url: formData.affiliate_url,
-        click_count: 0,
-      });
+        // Update redirect target_url
+        const { error: redirectError } = await supabase
+          .from("redirects")
+          .update({ target_url: formData.affiliate_url })
+          .eq("product_id", id);
 
-      if (redirectError) throw redirectError;
+        if (redirectError) throw redirectError;
 
-      toast({
-        title: "Başarılı",
-        description: "Ürün eklendi.",
-      });
+        toast({
+          title: "Başarılı",
+          description: "Ürün güncellendi.",
+        });
+      } else {
+        // Insert product
+        const { data: product, error: productError } = await supabase
+          .from("products")
+          .insert({
+            title: formData.title,
+            description: formData.description,
+            image_url: formData.image_url,
+            category_id: formData.category_id || null,
+            tags: formData.tags
+              ? formData.tags.split(",").map((t) => t.trim()).filter(Boolean)
+              : [],
+            affiliate_url: formData.affiliate_url,
+          })
+          .select()
+          .single();
+
+        if (productError) throw productError;
+
+        // Insert redirect
+        const slug = generateSlug(formData.title);
+        const { error: redirectError } = await supabase.from("redirects").insert({
+          product_id: product.id,
+          slug: slug,
+          target_url: formData.affiliate_url,
+          click_count: 0,
+        });
+
+        if (redirectError) throw redirectError;
+
+        toast({
+          title: "Başarılı",
+          description: "Ürün eklendi.",
+        });
+      }
 
       navigate("/admin/urunler");
     } catch (error) {
       toast({
         variant: "destructive",
         title: "Hata",
-        description: "Ürün eklenemedi.",
+        description: isEditMode ? "Ürün güncellenemedi." : "Ürün eklenemedi.",
       });
     } finally {
       setLoading(false);
@@ -114,8 +182,12 @@ export default function AdminAddProduct() {
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Yeni Ürün Ekle</h1>
-          <p className="text-muted-foreground">Yeni bir ürün oluşturun</p>
+          <h1 className="text-3xl font-bold text-foreground">
+            {isEditMode ? "Ürün Düzenle" : "Yeni Ürün Ekle"}
+          </h1>
+          <p className="text-muted-foreground">
+            {isEditMode ? "Ürün bilgilerini güncelleyin" : "Yeni bir ürün oluşturun"}
+          </p>
         </div>
       </div>
 
@@ -191,7 +263,7 @@ export default function AdminAddProduct() {
         </div>
 
         <Button type="submit" disabled={loading} className="w-full">
-          {loading ? "Ekleniyor..." : "Ürün Ekle"}
+          {loading ? (isEditMode ? "Güncelleniyor..." : "Ekleniyor...") : (isEditMode ? "Ürünü Güncelle" : "Ürün Ekle")}
         </Button>
       </form>
     </div>
