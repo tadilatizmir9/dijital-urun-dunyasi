@@ -4,9 +4,13 @@ import { supabase } from "@/lib/supabaseClient";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
-import { ArrowLeft } from "lucide-react";
-import MDEditor from "@uiw/react-md-editor";
+import { ArrowLeft, Eye } from "lucide-react";
+import ReactMarkdown from "react-markdown";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import rehypeHighlight from "rehype-highlight";
+import "highlight.js/styles/github-dark.css";
 
 export default function AdminAddBlog() {
   const navigate = useNavigate();
@@ -47,13 +51,12 @@ export default function AdminAddBlog() {
     });
   };
 
-  const handleContentChange = (value: string | undefined) => {
-    const newContent = value || "";
+  const handleContentChange = (value: string) => {
     setFormData({
       ...formData,
-      content: newContent,
+      content: value,
       // Excerpt otomatik oluştur (ilk 150 karakter, markdown olmadan)
-      excerpt: stripMarkdown(newContent).substring(0, 150),
+      excerpt: stripMarkdown(value).substring(0, 150),
     });
   };
 
@@ -102,7 +105,7 @@ export default function AdminAddBlog() {
         </Button>
         <div>
           <h1 className="text-3xl font-bold text-foreground">Yeni Blog Yazısı</h1>
-          <p className="text-muted-foreground">Markdown editör ile yeni bir blog yazısı oluşturun</p>
+          <p className="text-muted-foreground">Markdown formatında yeni bir blog yazısı oluşturun</p>
         </div>
       </div>
 
@@ -155,18 +158,45 @@ export default function AdminAddBlog() {
           </p>
         </div>
 
-        <div className="space-y-2" data-color-mode="light">
+        <div className="space-y-2">
           <Label>İçerik * (Markdown)</Label>
-          <MDEditor
-            value={formData.content}
-            onChange={handleContentChange}
-            height={500}
-            preview="live"
-            highlightEnable={true}
-          />
-          <p className="text-xs text-muted-foreground">
-            Markdown formatında içerik yazabilirsiniz. Sağ tarafta önizleme görünecektir.
-          </p>
+          <Tabs defaultValue="edit" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="edit">Düzenle</TabsTrigger>
+              <TabsTrigger value="preview">
+                <Eye className="h-4 w-4 mr-2" />
+                Önizleme
+              </TabsTrigger>
+            </TabsList>
+            <TabsContent value="edit" className="mt-4">
+              <Textarea
+                value={formData.content}
+                onChange={(e) => handleContentChange(e.target.value)}
+                rows={20}
+                className="font-mono text-sm"
+                placeholder="# Başlık&#10;&#10;## Alt Başlık&#10;&#10;Normal metin...&#10;&#10;**Kalın metin**&#10;&#10;*İtalik metin*&#10;&#10;- Liste öğesi 1&#10;- Liste öğesi 2&#10;&#10;```javascript&#10;// Kod örneği&#10;console.log('Hello');&#10;```"
+                required
+              />
+              <p className="text-xs text-muted-foreground mt-2">
+                Markdown formatında yazın. Önizleme sekmesinden sonucu görüntüleyebilirsiniz.
+              </p>
+            </TabsContent>
+            <TabsContent value="preview" className="mt-4">
+              <div className="min-h-[500px] border border-border rounded-lg p-6 bg-card">
+                {formData.content ? (
+                  <div className="prose prose-lg max-w-none prose-headings:font-bold prose-h1:text-4xl prose-h2:text-3xl prose-h3:text-2xl prose-p:text-foreground prose-a:text-purple prose-a:no-underline hover:prose-a:underline prose-strong:text-foreground prose-code:text-purple prose-code:bg-muted prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-pre:bg-card prose-pre:border prose-pre:border-border prose-img:rounded-2xl">
+                    <ReactMarkdown rehypePlugins={[rehypeHighlight]}>
+                      {formData.content}
+                    </ReactMarkdown>
+                  </div>
+                ) : (
+                  <p className="text-muted-foreground text-center py-12">
+                    Önizleme için içerik yazın...
+                  </p>
+                )}
+              </div>
+            </TabsContent>
+          </Tabs>
         </div>
 
         <Button 
