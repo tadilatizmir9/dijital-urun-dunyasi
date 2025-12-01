@@ -9,10 +9,10 @@ export const Header = () => {
         <div className="flex h-20 items-center justify-between">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-3 group">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl gradient-primary shadow-primary group-hover:shadow-glow transition-all duration-300">
-              <span className="text-xl font-bold text-primary-foreground">D</span>
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-lg group-hover:shadow-primary/30 transition-all duration-300 group-hover:scale-110">
+              <span className="text-2xl font-black">D</span>
             </div>
-            <span className="text-2xl font-extrabold text-foreground tracking-tight">Dijitalstok</span>
+            <span className="text-2xl font-black text-foreground tracking-tighter">Dijitalstok</span>
           </Link>
 
           {/* Navigation */}
