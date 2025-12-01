@@ -16,11 +16,11 @@ export default function Category() {
     sortBy: "newest",
   });
 
-  // Fetch category once when slug changes
+  // Kategori bilgisini sadece slug değiştiğinde çek
   useEffect(() => {
     const fetchCategory = async () => {
       if (!slug) return;
-      
+
       setLoading(true);
       const { data: categoryData } = await supabase
         .from("categories")
@@ -35,13 +35,13 @@ export default function Category() {
     fetchCategory();
   }, [slug]);
 
-  // Fetch products when category or filters change
+  // Ürünleri kategori veya filtreler değiştiğinde çek
   useEffect(() => {
     const fetchProducts = async () => {
       if (!category) return;
 
       setLoading(true);
-      
+
       let query = supabase
         .from("products")
         .select("*, categories(name)")
@@ -77,7 +77,7 @@ export default function Category() {
 
         setProducts(filteredData);
       }
-      
+
       setLoading(false);
     };
 
@@ -85,8 +85,20 @@ export default function Category() {
   }, [category, filters]);
 
   const handleFilterChange = (newFilters: FilterState) => {
-    setFilters(newFilters);
+    // Aynı filtreler tekrar geliyorsa state'i güncelleyip yeniden fetch etme
+    setFilters((prev) => {
+      const tagsEqual =
+        prev.tags.length === newFilters.tags.length &&
+        prev.tags.every((tag, idx) => tag === newFilters.tags[idx]);
+
+      if (prev.sortBy === newFilters.sortBy && tagsEqual) {
+        return prev;
+      }
+
+      return newFilters;
+    });
   };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -124,8 +136,8 @@ export default function Category() {
           </div>
 
           {/* Filtreleme - kategori zaten belirli olduğu için selectedCategory prop'u gönderiyoruz */}
-          <ProductFilters 
-            onFilterChange={handleFilterChange} 
+          <ProductFilters
+            onFilterChange={handleFilterChange}
             selectedCategory={category.id}
           />
 
