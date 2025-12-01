@@ -41,6 +41,7 @@ const App = () => (
               <Route index element={<AdminDashboard />} />
               <Route path="urunler" element={<AdminProducts />} />
               <Route path="urun-ekle" element={<AdminAddProduct />} />
+              <Route path="urun-duzenle/:id" element={<AdminAddProduct />} />
               <Route path="blog" element={<AdminBlog />} />
               <Route path="blog-ekle" element={<AdminAddBlog />} />
               <Route path="kategoriler" element={<AdminCategories />} />

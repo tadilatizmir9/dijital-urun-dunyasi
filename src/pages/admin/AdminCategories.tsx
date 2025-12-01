@@ -11,12 +11,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Trash2 } from "lucide-react";
+import { Trash2, Pencil, X, Check } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
 export default function AdminCategories() {
   const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editData, setEditData] = useState({ name: "", slug: "", icon: "" });
   const [formData, setFormData] = useState({
     name: "",
     slug: "",
@@ -90,6 +92,50 @@ export default function AdminCategories() {
     }
   };
 
+  const handleEdit = (category: any) => {
+    setEditingId(category.id);
+    setEditData({
+      name: category.name,
+      slug: category.slug,
+      icon: category.icon || "",
+    });
+  };
+
+  const handleCancelEdit = () => {
+    setEditingId(null);
+    setEditData({ name: "", slug: "", icon: "" });
+  };
+
+  const handleSaveEdit = async (id: string) => {
+    const { error } = await supabase
+      .from("categories")
+      .update({
+        name: editData.name,
+        slug: editData.slug,
+        icon: editData.icon,
+      })
+      .eq("id", id);
+
+    if (error) {
+      toast({
+        variant: "destructive",
+        title: "Hata",
+        description: "Kategori güncellenemedi.",
+      });
+      return;
+    }
+
+    toast({
+      title: "Başarılı",
+      description: "Kategori güncellendi.",
+    });
+
+    setEditingId(null);
+    fetchCategories();
+    // Force refresh of header categories by dispatching a custom event
+    window.dispatchEvent(new Event('categoriesUpdated'));
+  };
+
   const handleDelete = async (id: string) => {
     if (!confirm("Bu kategoriyi silmek istediğinize emin misiniz?")) return;
 
@@ -110,6 +156,8 @@ export default function AdminCategories() {
     });
 
     fetchCategories();
+    // Force refresh of header categories by dispatching a custom event
+    window.dispatchEvent(new Event('categoriesUpdated'));
   };
 
   return (
@@ -180,19 +228,74 @@ export default function AdminCategories() {
               <TableBody>
                 {categories.map((category) => (
                   <TableRow key={category.id}>
-                    <TableCell className="text-2xl">{category.icon || "📁"}</TableCell>
-                    <TableCell className="font-medium">{category.name}</TableCell>
-                    <TableCell className="text-muted-foreground">{category.slug}</TableCell>
-                    <TableCell className="text-right">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleDelete(category.id)}
-                        className="text-destructive hover:text-destructive"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </TableCell>
+                    {editingId === category.id ? (
+                      <>
+                        <TableCell>
+                          <Input
+                            value={editData.icon}
+                            onChange={(e) => setEditData({ ...editData, icon: e.target.value })}
+                            className="w-16"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            value={editData.name}
+                            onChange={(e) => setEditData({ ...editData, name: e.target.value })}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            value={editData.slug}
+                            onChange={(e) => setEditData({ ...editData, slug: e.target.value })}
+                          />
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleSaveEdit(category.id)}
+                              className="text-primary hover:text-primary"
+                            >
+                              <Check className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={handleCancelEdit}
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </>
+                    ) : (
+                      <>
+                        <TableCell className="text-2xl">{category.icon || "📁"}</TableCell>
+                        <TableCell className="font-medium">{category.name}</TableCell>
+                        <TableCell className="text-muted-foreground">{category.slug}</TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleEdit(category)}
+                              className="text-primary hover:text-primary"
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleDelete(category.id)}
+                              className="text-destructive hover:text-destructive"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </>
+                    )}
                   </TableRow>
                 ))}
               </TableBody>

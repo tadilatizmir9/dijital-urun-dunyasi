@@ -27,6 +27,16 @@ export const Header = () => {
 
   useEffect(() => {
     fetchCategories();
+
+    // Listen for category updates from admin panel
+    const handleCategoriesUpdate = () => {
+      fetchCategories();
+    };
+
+    window.addEventListener('categoriesUpdated', handleCategoriesUpdate);
+    return () => {
+      window.removeEventListener('categoriesUpdated', handleCategoriesUpdate);
+    };
   }, []);
 
   const fetchCategories = async () => {
