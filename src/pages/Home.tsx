@@ -32,10 +32,11 @@ export default function Home() {
       .limit(6);
     if (categoriesData) setCategories(categoriesData);
 
-    // Fetch featured products (first 8)
+    // Fetch featured products (marked as featured)
     const { data: featuredData } = await supabase
       .from("products")
       .select("*, categories(name)")
+      .eq("featured", true)
       .limit(8);
     if (featuredData) setFeaturedProducts(featuredData);
 
