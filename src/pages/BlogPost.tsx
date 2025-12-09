@@ -24,7 +24,8 @@ export default function BlogPost() {
       .from("posts")
       .select("*")
       .eq("slug", slug)
-      .single();
+      .eq("status", "published")
+      .maybeSingle();
 
     if (data) {
       setPost(data);

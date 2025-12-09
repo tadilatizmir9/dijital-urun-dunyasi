@@ -15,6 +15,7 @@ export default function Blog() {
     const { data } = await supabase
       .from("posts")
       .select("*")
+      .eq("status", "published")
       .order("created_at", { ascending: false });
 
     if (data) {

@@ -9,6 +9,13 @@ import { toast } from "@/hooks/use-toast";
 import { ArrowLeft } from "lucide-react";
 import { Helmet } from "react-helmet-async";
 import RichTextEditor from "@/components/admin/RichTextEditor";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export default function AdminEditBlog() {
   const navigate = useNavigate();
@@ -23,6 +30,7 @@ export default function AdminEditBlog() {
     content: "",
     meta_title: "",
     meta_description: "",
+    status: "draft" as "draft" | "published",
   });
 
   useEffect(() => {
@@ -56,6 +64,7 @@ export default function AdminEditBlog() {
       content: data.content || "",
       meta_title: data.meta_title || "",
       meta_description: data.meta_description || "",
+      status: (data.status as "draft" | "published") || "draft",
     });
     setLoading(false);
   };
@@ -112,6 +121,7 @@ export default function AdminEditBlog() {
           content: formData.content,
           meta_title: formData.meta_title,
           meta_description: formData.meta_description,
+          status: formData.status,
         })
         .eq("id", id);
 
@@ -219,6 +229,27 @@ export default function AdminEditBlog() {
               placeholder="Blog yazısının kısa özeti..."
               rows={2}
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="status">Yayın Durumu</Label>
+            <Select
+              value={formData.status}
+              onValueChange={(value: "draft" | "published") =>
+                setFormData({ ...formData, status: value })
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Durum seçin" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="draft">Taslak</SelectItem>
+                <SelectItem value="published">Yayında</SelectItem>
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">
+              Taslak yazılar sadece admin panelinde görünür.
+            </p>
           </div>
 
           {/* SEO / Meta Alanları */}
