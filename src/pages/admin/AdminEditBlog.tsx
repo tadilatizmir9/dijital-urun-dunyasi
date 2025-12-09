@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, X, Plus } from "lucide-react";
 import { Helmet } from "react-helmet-async";
 import RichTextEditor from "@/components/admin/RichTextEditor";
 import {
@@ -16,12 +16,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+
+interface BlogCategory {
+  id: string;
+  name: string;
+  slug: string;
+}
 
 export default function AdminEditBlog() {
   const navigate = useNavigate();
   const { id } = useParams();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [categories, setCategories] = useState<BlogCategory[]>([]);
+  const [newTag, setNewTag] = useState("");
   const [formData, setFormData] = useState({
     title: "",
     slug: "",
@@ -31,13 +40,27 @@ export default function AdminEditBlog() {
     meta_title: "",
     meta_description: "",
     status: "draft" as "draft" | "published",
+    category_id: "",
+    tags: [] as string[],
   });
 
   useEffect(() => {
-    if (id) {
+    fetchCategories();
+  }, []);
+
+  useEffect(() => {
+    if (id && categories.length >= 0) {
       fetchPost();
     }
   }, [id]);
+
+  const fetchCategories = async () => {
+    const { data } = await supabase
+      .from("blog_categories")
+      .select("*")
+      .order("name");
+    if (data) setCategories(data);
+  };
 
   const fetchPost = async () => {
     const { data, error } = await supabase
@@ -65,6 +88,8 @@ export default function AdminEditBlog() {
       meta_title: data.meta_title || "",
       meta_description: data.meta_description || "",
       status: (data.status as "draft" | "published") || "draft",
+      category_id: data.category_id || "",
+      tags: data.tags || [],
     });
     setLoading(false);
   };
@@ -106,6 +131,21 @@ export default function AdminEditBlog() {
     });
   };
 
+  const handleAddTag = () => {
+    const tag = newTag.trim().toLowerCase();
+    if (tag && !formData.tags.includes(tag)) {
+      setFormData({ ...formData, tags: [...formData.tags, tag] });
+      setNewTag("");
+    }
+  };
+
+  const handleRemoveTag = (tagToRemove: string) => {
+    setFormData({
+      ...formData,
+      tags: formData.tags.filter((tag) => tag !== tagToRemove),
+    });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
@@ -122,6 +162,8 @@ export default function AdminEditBlog() {
           meta_title: formData.meta_title,
           meta_description: formData.meta_description,
           status: formData.status,
+          category_id: formData.category_id || null,
+          tags: formData.tags,
         })
         .eq("id", id);
 
@@ -206,6 +248,84 @@ export default function AdminEditBlog() {
             </div>
           </div>
 
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <Label htmlFor="status">Yayın Durumu</Label>
+              <Select
+                value={formData.status}
+                onValueChange={(value: "draft" | "published") =>
+                  setFormData({ ...formData, status: value })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Durum seçin" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="draft">Taslak</SelectItem>
+                  <SelectItem value="published">Yayında</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="category">Kategori</Label>
+              <Select
+                value={formData.category_id}
+                onValueChange={(value) =>
+                  setFormData({ ...formData, category_id: value })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Kategori seçin" />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories.map((cat) => (
+                    <SelectItem key={cat.id} value={cat.id}>
+                      {cat.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {/* Etiketler */}
+          <div className="space-y-2">
+            <Label>Etiketler</Label>
+            <div className="flex gap-2">
+              <Input
+                value={newTag}
+                onChange={(e) => setNewTag(e.target.value)}
+                placeholder="Etiket ekle..."
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    handleAddTag();
+                  }
+                }}
+              />
+              <Button type="button" variant="outline" onClick={handleAddTag}>
+                <Plus className="h-4 w-4" />
+              </Button>
+            </div>
+            {formData.tags.length > 0 && (
+              <div className="flex flex-wrap gap-2 mt-2">
+                {formData.tags.map((tag) => (
+                  <Badge key={tag} variant="secondary" className="gap-1">
+                    {tag}
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveTag(tag)}
+                      className="ml-1 hover:text-destructive"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </Badge>
+                ))}
+              </div>
+            )}
+          </div>
+
           <div className="space-y-2">
             <Label htmlFor="cover_image">Kapak Görseli URL</Label>
             <Input
@@ -231,27 +351,6 @@ export default function AdminEditBlog() {
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="status">Yayın Durumu</Label>
-            <Select
-              value={formData.status}
-              onValueChange={(value: "draft" | "published") =>
-                setFormData({ ...formData, status: value })
-              }
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Durum seçin" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="draft">Taslak</SelectItem>
-                <SelectItem value="published">Yayında</SelectItem>
-              </SelectContent>
-            </Select>
-            <p className="text-xs text-muted-foreground">
-              Taslak yazılar sadece admin panelinde görünür.
-            </p>
-          </div>
-
           {/* SEO / Meta Alanları */}
           <div className="border border-border rounded-lg p-4 space-y-4 bg-muted/30">
             <h3 className="font-semibold text-foreground flex items-center gap-2">
@@ -270,7 +369,7 @@ export default function AdminEditBlog() {
                 maxLength={60}
               />
               <p className="text-xs text-muted-foreground">
-                {formData.meta_title.length}/60 karakter (önerilen max 60)
+                {formData.meta_title.length}/60 karakter
               </p>
             </div>
 
@@ -287,8 +386,7 @@ export default function AdminEditBlog() {
                 maxLength={160}
               />
               <p className="text-xs text-muted-foreground">
-                {formData.meta_description.length}/160 karakter (önerilen max
-                160)
+                {formData.meta_description.length}/160 karakter
               </p>
             </div>
           </div>
