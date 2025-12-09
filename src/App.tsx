@@ -23,6 +23,7 @@ import AdminProducts from "./pages/admin/AdminProducts";
 import AdminAddProduct from "./pages/admin/AdminAddProduct";
 import AdminBlog from "./pages/admin/AdminBlog";
 import AdminAddBlog from "./pages/admin/AdminAddBlog";
+import AdminEditBlog from "./pages/admin/AdminEditBlog";
 import AdminCategories from "./pages/admin/AdminCategories";
 import AdminSubcategories from "./pages/admin/AdminSubcategories";
 import NotFound from "./pages/NotFound";
@@ -46,6 +47,7 @@ const App = () => (
               <Route path="urun-duzenle/:id" element={<AdminAddProduct />} />
               <Route path="blog" element={<AdminBlog />} />
               <Route path="blog-ekle" element={<AdminAddBlog />} />
+              <Route path="blog-duzenle/:id" element={<AdminEditBlog />} />
               <Route path="kategoriler" element={<AdminCategories />} />
               <Route path="kategoriler/:categoryId/alt-kategoriler" element={<AdminSubcategories />} />
             </Route>

@@ -10,7 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, Pencil } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { Helmet } from "react-helmet-async";
 
@@ -99,7 +99,12 @@ export default function AdminBlog() {
                   <TableCell>
                     {new Date(post.created_at).toLocaleDateString("tr-TR")}
                   </TableCell>
-                  <TableCell className="text-right">
+                  <TableCell className="text-right space-x-1">
+                    <Link to={`/admin/blog-duzenle/${post.id}`}>
+                      <Button variant="ghost" size="icon">
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                    </Link>
                     <Button
                       variant="ghost"
                       size="icon"
