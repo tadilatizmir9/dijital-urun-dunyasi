@@ -10,7 +10,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, Trash2, Pencil } from "lucide-react";
+import { Plus, Trash2, Pencil, Star } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 import { toast } from "@/hooks/use-toast";
 import { Helmet } from "react-helmet-async";
 
@@ -32,6 +33,26 @@ export default function AdminProducts() {
       setProducts(data);
     }
     setLoading(false);
+  };
+
+  const handleToggleFeatured = async (id: string, currentValue: boolean) => {
+    const { error } = await supabase
+      .from("products")
+      .update({ featured: !currentValue })
+      .eq("id", id);
+
+    if (error) {
+      toast({
+        variant: "destructive",
+        title: "Hata",
+        description: "Ürün güncellenemedi.",
+      });
+      return;
+    }
+
+    setProducts(products.map(p => 
+      p.id === id ? { ...p, featured: !currentValue } : p
+    ));
   };
 
   const handleDelete = async (id: string) => {
@@ -88,6 +109,7 @@ export default function AdminProducts() {
                 <TableHead>Görsel</TableHead>
                 <TableHead>Başlık</TableHead>
                 <TableHead>Kategori</TableHead>
+                <TableHead>Öne Çıkar</TableHead>
                 <TableHead>Tarih</TableHead>
                 <TableHead className="text-right">İşlemler</TableHead>
               </TableRow>
@@ -112,6 +134,15 @@ export default function AdminProducts() {
                   </TableCell>
                   <TableCell className="font-medium">{product.title}</TableCell>
                   <TableCell>{product.categories?.name || "-"}</TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <Switch
+                        checked={product.featured || false}
+                        onCheckedChange={() => handleToggleFeatured(product.id, product.featured || false)}
+                      />
+                      {product.featured && <Star className="h-4 w-4 text-secondary fill-secondary" />}
+                    </div>
+                  </TableCell>
                   <TableCell>
                     {new Date(product.created_at).toLocaleDateString("tr-TR")}
                   </TableCell>
