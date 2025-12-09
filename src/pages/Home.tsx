@@ -24,10 +24,11 @@ export default function Home() {
   }, []);
 
   const fetchData = async () => {
-    // Fetch categories
+    // Fetch categories that are marked to show on homepage
     const { data: categoriesData } = await supabase
       .from("categories")
       .select("*")
+      .eq("show_on_homepage", true)
       .limit(6);
     if (categoriesData) setCategories(categoriesData);
 

@@ -11,10 +11,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Trash2, Pencil, X, Check, FolderTree } from "lucide-react";
+import { Trash2, Pencil, X, Check, FolderTree, Home } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { Helmet } from "react-helmet-async";
 import { Link } from "react-router-dom";
+import { Switch } from "@/components/ui/switch";
 
 export default function AdminCategories() {
   const [categories, setCategories] = useState<any[]>([]);
@@ -138,6 +139,29 @@ export default function AdminCategories() {
     window.dispatchEvent(new Event('categoriesUpdated'));
   };
 
+  const handleToggleHomepage = async (id: string, currentValue: boolean) => {
+    const { error } = await supabase
+      .from("categories")
+      .update({ show_on_homepage: !currentValue })
+      .eq("id", id);
+
+    if (error) {
+      toast({
+        variant: "destructive",
+        title: "Hata",
+        description: "Ayar güncellenemedi.",
+      });
+      return;
+    }
+
+    toast({
+      title: "Başarılı",
+      description: !currentValue ? "Ana sayfada gösterilecek." : "Ana sayfadan kaldırıldı.",
+    });
+
+    fetchCategories();
+  };
+
   const handleDelete = async (id: string) => {
     if (!confirm("Bu kategoriyi silmek istediğinize emin misiniz?")) return;
 
@@ -224,14 +248,15 @@ export default function AdminCategories() {
         ) : (
           <div className="rounded-lg border border-border bg-card">
             <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Icon</TableHead>
-                  <TableHead>Kategori Adı</TableHead>
-                  <TableHead>Slug</TableHead>
-                  <TableHead className="text-right">İşlemler</TableHead>
-                </TableRow>
-              </TableHeader>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Icon</TableHead>
+                <TableHead>Kategori Adı</TableHead>
+                <TableHead>Slug</TableHead>
+                <TableHead className="text-center">Ana Sayfa</TableHead>
+                <TableHead className="text-right">İşlemler</TableHead>
+              </TableRow>
+            </TableHeader>
               <TableBody>
                 {categories.map((category) => (
                   <TableRow key={category.id}>
@@ -256,6 +281,7 @@ export default function AdminCategories() {
                             onChange={(e) => setEditData({ ...editData, slug: e.target.value })}
                           />
                         </TableCell>
+                        <TableCell></TableCell>
                         <TableCell className="text-right">
                           <div className="flex items-center justify-end gap-2">
                             <Button
@@ -277,11 +303,22 @@ export default function AdminCategories() {
                         </TableCell>
                       </>
                     ) : (
-                      <>
-                        <TableCell className="text-2xl">{category.icon || "📁"}</TableCell>
-                        <TableCell className="font-medium">{category.name}</TableCell>
-                        <TableCell className="text-muted-foreground">{category.slug}</TableCell>
-                        <TableCell className="text-right">
+                    <>
+                      <TableCell className="text-2xl">{category.icon || "📁"}</TableCell>
+                      <TableCell className="font-medium">{category.name}</TableCell>
+                      <TableCell className="text-muted-foreground">{category.slug}</TableCell>
+                      <TableCell className="text-center">
+                        <div className="flex items-center justify-center gap-2">
+                          <Switch
+                            checked={category.show_on_homepage}
+                            onCheckedChange={() => handleToggleHomepage(category.id, category.show_on_homepage)}
+                          />
+                          {category.show_on_homepage && (
+                            <Home className="h-4 w-4 text-primary" />
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-right">
                           <div className="flex items-center justify-end gap-2">
                             <Link to={`/admin/kategoriler/${category.id}/alt-kategoriler`}>
                               <Button
