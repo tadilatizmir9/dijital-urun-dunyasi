@@ -56,10 +56,10 @@ export default function BlogPost() {
   return (
     <>
       <Helmet>
-        <title>{post.title} – Dijitalstok Blog</title>
+        <title>{post.meta_title || post.title} – Dijitalstok Blog</title>
         <meta
           name="description"
-          content={post.excerpt || post.content?.substring(0, 150) || post.title}
+          content={post.meta_description || post.excerpt || post.title}
         />
       </Helmet>
 
@@ -107,12 +107,11 @@ export default function BlogPost() {
             </p>
           )}
 
-          {/* Markdown Content */}
-          <div className="prose prose-lg max-w-none prose-headings:font-bold prose-h1:text-4xl prose-h2:text-3xl prose-h3:text-2xl prose-p:text-foreground prose-a:text-purple prose-a:no-underline hover:prose-a:underline prose-strong:text-foreground prose-code:text-purple prose-code:bg-muted prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-pre:bg-card prose-pre:border prose-pre:border-border prose-img:rounded-2xl">
-            <ReactMarkdown rehypePlugins={[rehypeHighlight]}>
-              {post.content}
-            </ReactMarkdown>
-          </div>
+          {/* HTML Content from Rich Text Editor */}
+          <div 
+            className="prose prose-lg max-w-none prose-headings:font-bold prose-h1:text-4xl prose-h2:text-3xl prose-h3:text-2xl prose-p:text-foreground prose-a:text-primary prose-a:underline prose-strong:text-foreground prose-code:text-primary prose-code:bg-muted prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-blockquote:border-l-4 prose-blockquote:border-primary prose-blockquote:pl-4 prose-blockquote:italic prose-img:rounded-2xl"
+            dangerouslySetInnerHTML={{ __html: post.content || "" }}
+          />
 
           {/* Dahili Linkleme - Daha Fazla İçerik Keşfet */}
           <section className="mt-16 pt-8 border-t border-border">
