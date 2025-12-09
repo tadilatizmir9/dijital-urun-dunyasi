@@ -10,6 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
 import { Plus, Trash2, Pencil } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { Helmet } from "react-helmet-async";
@@ -87,6 +88,7 @@ export default function AdminBlog() {
               <TableRow>
                 <TableHead>Başlık</TableHead>
                 <TableHead>Slug</TableHead>
+                <TableHead>Durum</TableHead>
                 <TableHead>Tarih</TableHead>
                 <TableHead className="text-right">İşlemler</TableHead>
               </TableRow>
@@ -96,6 +98,14 @@ export default function AdminBlog() {
                 <TableRow key={post.id}>
                   <TableCell className="font-medium">{post.title}</TableCell>
                   <TableCell className="text-muted-foreground">{post.slug}</TableCell>
+                  <TableCell>
+                    <Badge 
+                      variant={post.status === "published" ? "default" : "secondary"}
+                      className={post.status === "published" ? "bg-green-600" : ""}
+                    >
+                      {post.status === "published" ? "Yayında" : "Taslak"}
+                    </Badge>
+                  </TableCell>
                   <TableCell>
                     {new Date(post.created_at).toLocaleDateString("tr-TR")}
                   </TableCell>

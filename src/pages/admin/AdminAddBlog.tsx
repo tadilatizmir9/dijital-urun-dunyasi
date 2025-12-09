@@ -9,6 +9,13 @@ import { toast } from "@/hooks/use-toast";
 import { ArrowLeft } from "lucide-react";
 import { Helmet } from "react-helmet-async";
 import RichTextEditor from "@/components/admin/RichTextEditor";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export default function AdminAddBlog() {
   const navigate = useNavigate();
@@ -21,6 +28,7 @@ export default function AdminAddBlog() {
     content: "",
     meta_title: "",
     meta_description: "",
+    status: "draft" as "draft" | "published",
   });
 
   const generateSlug = (title: string) => {
@@ -77,6 +85,7 @@ export default function AdminAddBlog() {
         content: formData.content,
         meta_title: formData.meta_title,
         meta_description: formData.meta_description,
+        status: formData.status,
       });
 
       if (error) throw error;
@@ -134,7 +143,28 @@ export default function AdminAddBlog() {
                 onChange={(e) => handleTitleChange(e.target.value)}
                 required
               />
-            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="status">Yayın Durumu</Label>
+            <Select
+              value={formData.status}
+              onValueChange={(value: "draft" | "published") =>
+                setFormData({ ...formData, status: value })
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Durum seçin" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="draft">Taslak</SelectItem>
+                <SelectItem value="published">Yayında</SelectItem>
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">
+              Taslak yazılar sadece admin panelinde görünür.
+            </p>
+          </div>
 
             <div className="space-y-2">
               <Label htmlFor="slug">Slug *</Label>
