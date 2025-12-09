@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 
 interface BlogCardProps {
   slug: string;
@@ -7,6 +8,8 @@ interface BlogCardProps {
   excerpt?: string;
   cover_image?: string;
   created_at?: string;
+  category?: string;
+  tags?: string[];
 }
 
 export const BlogCard = ({
@@ -15,6 +18,8 @@ export const BlogCard = ({
   excerpt,
   cover_image,
   created_at,
+  category,
+  tags,
 }: BlogCardProps) => {
   return (
     <div className="group overflow-hidden rounded-3xl bg-card border border-border transition-all duration-300 hover:shadow-xl hover:shadow-primary/10 hover:border-primary/50 hover:-translate-y-1">
@@ -33,6 +38,15 @@ export const BlogCard = ({
           </div>
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        
+        {/* Category Badge */}
+        {category && (
+          <div className="absolute top-3 left-3">
+            <Badge className="bg-primary text-primary-foreground">
+              {category}
+            </Badge>
+          </div>
+        )}
       </Link>
 
       {/* Content */}
@@ -60,6 +74,22 @@ export const BlogCard = ({
           <p className="text-sm text-muted-foreground line-clamp-3 leading-relaxed">
             {excerpt}
           </p>
+        )}
+
+        {/* Tags */}
+        {tags && tags.length > 0 && (
+          <div className="flex flex-wrap gap-1">
+            {tags.slice(0, 3).map((tag) => (
+              <Badge key={tag} variant="outline" className="text-xs">
+                {tag}
+              </Badge>
+            ))}
+            {tags.length > 3 && (
+              <Badge variant="outline" className="text-xs">
+                +{tags.length - 3}
+              </Badge>
+            )}
+          </div>
         )}
 
         {/* Button */}

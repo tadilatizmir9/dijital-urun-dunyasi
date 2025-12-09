@@ -3,10 +3,8 @@ import { useParams, Link } from "react-router-dom";
 import { supabase } from "@/lib/supabaseClient";
 import { Helmet } from "react-helmet-async";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { ArrowLeft } from "lucide-react";
-import ReactMarkdown from "react-markdown";
-import rehypeHighlight from "rehype-highlight";
-import "highlight.js/styles/github-dark.css";
 
 export default function BlogPost() {
   const { slug } = useParams();
@@ -22,7 +20,7 @@ export default function BlogPost() {
   const fetchPost = async () => {
     const { data } = await supabase
       .from("posts")
-      .select("*")
+      .select("*, blog_categories(name, slug)")
       .eq("slug", slug)
       .eq("status", "published")
       .maybeSingle();
@@ -85,8 +83,15 @@ export default function BlogPost() {
             </div>
           )}
 
-          {/* Meta */}
-          <div className="mb-6">
+          {/* Meta - Category & Date */}
+          <div className="mb-6 flex flex-wrap items-center gap-3">
+            {post.blog_categories?.name && (
+              <Link to={`/blog?kategori=${post.blog_categories.slug}`}>
+                <Badge className="bg-primary text-primary-foreground hover:bg-primary/90">
+                  {post.blog_categories.name}
+                </Badge>
+              </Link>
+            )}
             <time className="text-sm text-muted-foreground">
               {new Date(post.created_at).toLocaleDateString("tr-TR", {
                 year: "numeric",
@@ -113,6 +118,22 @@ export default function BlogPost() {
             className="prose prose-lg max-w-none prose-headings:font-bold prose-h1:text-4xl prose-h2:text-3xl prose-h3:text-2xl prose-p:text-foreground prose-a:text-primary prose-a:underline prose-strong:text-foreground prose-code:text-primary prose-code:bg-muted prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-blockquote:border-l-4 prose-blockquote:border-primary prose-blockquote:pl-4 prose-blockquote:italic prose-img:rounded-2xl"
             dangerouslySetInnerHTML={{ __html: post.content || "" }}
           />
+
+          {/* Tags */}
+          {post.tags && post.tags.length > 0 && (
+            <div className="mt-8 pt-6 border-t border-border">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-sm font-medium text-muted-foreground">Etiketler:</span>
+                {post.tags.map((tag: string) => (
+                  <Link key={tag} to={`/blog?etiket=${tag}`}>
+                    <Badge variant="secondary" className="hover:bg-secondary/80 cursor-pointer">
+                      {tag}
+                    </Badge>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Dahili Linkleme - Daha Fazla İçerik Keşfet */}
           <section className="mt-16 pt-8 border-t border-border">
