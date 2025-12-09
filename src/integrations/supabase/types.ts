@@ -44,6 +44,7 @@ export type Database = {
           icon: string | null
           id: string
           name: string
+          show_on_homepage: boolean
           slug: string
           updated_at: string | null
         }
@@ -52,6 +53,7 @@ export type Database = {
           icon?: string | null
           id?: string
           name: string
+          show_on_homepage?: boolean
           slug: string
           updated_at?: string | null
         }
@@ -60,6 +62,7 @@ export type Database = {
           icon?: string | null
           id?: string
           name?: string
+          show_on_homepage?: boolean
           slug?: string
           updated_at?: string | null
         }
