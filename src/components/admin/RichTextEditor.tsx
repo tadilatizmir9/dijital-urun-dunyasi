@@ -3,6 +3,10 @@ import StarterKit from "@tiptap/starter-kit";
 import Link from "@tiptap/extension-link";
 import Image from "@tiptap/extension-image";
 import Placeholder from "@tiptap/extension-placeholder";
+import { Table } from "@tiptap/extension-table";
+import { TableRow } from "@tiptap/extension-table-row";
+import { TableCell } from "@tiptap/extension-table-cell";
+import { TableHeader } from "@tiptap/extension-table-header";
 import { Button } from "@/components/ui/button";
 import {
   Bold,
@@ -19,8 +23,17 @@ import {
   Redo,
   Code,
   Minus,
+  Table as TableIcon,
+  Plus,
+  Trash2,
 } from "lucide-react";
 import { useCallback } from "react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface RichTextEditorProps {
   content: string;
@@ -54,6 +67,23 @@ export default function RichTextEditor({
       Placeholder.configure({
         placeholder,
       }),
+      Table.configure({
+        resizable: true,
+        HTMLAttributes: {
+          class: "border-collapse border border-border w-full my-4",
+        },
+      }),
+      TableRow,
+      TableHeader.configure({
+        HTMLAttributes: {
+          class: "border border-border bg-muted p-2 font-bold text-left",
+        },
+      }),
+      TableCell.configure({
+        HTMLAttributes: {
+          class: "border border-border p-2",
+        },
+      }),
     ],
     content,
     onUpdate: ({ editor }) => {
@@ -62,7 +92,7 @@ export default function RichTextEditor({
     editorProps: {
       attributes: {
         class:
-          "prose prose-lg max-w-none min-h-[400px] p-4 focus:outline-none prose-headings:font-bold prose-h1:text-3xl prose-h2:text-2xl prose-h3:text-xl prose-p:text-foreground prose-a:text-primary prose-strong:text-foreground prose-code:text-primary prose-code:bg-muted prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-blockquote:border-l-4 prose-blockquote:border-primary prose-blockquote:pl-4 prose-blockquote:italic prose-img:rounded-xl",
+          "prose prose-lg max-w-none min-h-[400px] p-4 focus:outline-none prose-headings:font-bold prose-h1:text-3xl prose-h2:text-2xl prose-h3:text-xl prose-p:text-foreground prose-a:text-primary prose-strong:text-foreground prose-code:text-primary prose-code:bg-muted prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-blockquote:border-l-4 prose-blockquote:border-primary prose-blockquote:pl-4 prose-blockquote:italic prose-img:rounded-xl prose-table:border-collapse prose-td:border prose-td:border-border prose-td:p-2 prose-th:border prose-th:border-border prose-th:p-2 prose-th:bg-muted",
       },
     },
   });
@@ -90,9 +120,16 @@ export default function RichTextEditor({
     }
   }, [editor]);
 
+  const insertTable = useCallback(() => {
+    if (!editor) return;
+    editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run();
+  }, [editor]);
+
   if (!editor) {
     return null;
   }
+
+  const isInTable = editor.isActive("table");
 
   return (
     <div className="border border-border rounded-lg overflow-hidden bg-card">
@@ -214,6 +251,57 @@ export default function RichTextEditor({
         >
           <Minus className="h-4 w-4" />
         </Button>
+
+        <div className="w-px h-6 bg-border mx-1" />
+
+        {/* Table Dropdown */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className={isInTable ? "bg-muted" : ""}
+            >
+              <TableIcon className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start">
+            <DropdownMenuItem onClick={insertTable}>
+              <Plus className="h-4 w-4 mr-2" />
+              Tablo Ekle (3x3)
+            </DropdownMenuItem>
+            {isInTable && (
+              <>
+                <DropdownMenuItem onClick={() => editor.chain().focus().addColumnBefore().run()}>
+                  Sola Sütun Ekle
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => editor.chain().focus().addColumnAfter().run()}>
+                  Sağa Sütun Ekle
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => editor.chain().focus().addRowBefore().run()}>
+                  Üste Satır Ekle
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => editor.chain().focus().addRowAfter().run()}>
+                  Alta Satır Ekle
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => editor.chain().focus().deleteColumn().run()}>
+                  Sütunu Sil
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => editor.chain().focus().deleteRow().run()}>
+                  Satırı Sil
+                </DropdownMenuItem>
+                <DropdownMenuItem 
+                  onClick={() => editor.chain().focus().deleteTable().run()}
+                  className="text-destructive"
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Tabloyu Sil
+                </DropdownMenuItem>
+              </>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
 
         <div className="w-px h-6 bg-border mx-1" />
 
