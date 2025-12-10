@@ -8,6 +8,8 @@ import { TableRow } from "@tiptap/extension-table-row";
 import { TableCell } from "@tiptap/extension-table-cell";
 import { TableHeader } from "@tiptap/extension-table-header";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Bold,
   Italic,
@@ -27,13 +29,20 @@ import {
   Plus,
   Trash2,
 } from "lucide-react";
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
 interface RichTextEditorProps {
   content: string;
@@ -46,6 +55,10 @@ export default function RichTextEditor({
   onChange,
   placeholder = "Blog içeriğinizi buraya yazın...",
 }: RichTextEditorProps) {
+  const [tableDialogOpen, setTableDialogOpen] = useState(false);
+  const [tableRows, setTableRows] = useState(3);
+  const [tableCols, setTableCols] = useState(3);
+
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -120,10 +133,19 @@ export default function RichTextEditor({
     }
   }, [editor]);
 
-  const insertTable = useCallback(() => {
+  const openTableDialog = () => {
+    setTableRows(3);
+    setTableCols(3);
+    setTableDialogOpen(true);
+  };
+
+  const insertTable = () => {
     if (!editor) return;
-    editor.chain().focus().insertTable({ rows: 5, cols: 5, withHeaderRow: true }).run();
-  }, [editor]);
+    const rows = Math.max(1, Math.min(20, tableRows));
+    const cols = Math.max(1, Math.min(20, tableCols));
+    editor.chain().focus().insertTable({ rows, cols, withHeaderRow: true }).run();
+    setTableDialogOpen(false);
+  };
 
   if (!editor) {
     return null;
@@ -266,10 +288,10 @@ export default function RichTextEditor({
               <TableIcon className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="start">
-            <DropdownMenuItem onClick={insertTable}>
+          <DropdownMenuContent align="start" className="bg-popover">
+            <DropdownMenuItem onClick={openTableDialog}>
               <Plus className="h-4 w-4 mr-2" />
-              Tablo Ekle (5x5)
+              Tablo Ekle
             </DropdownMenuItem>
             {isInTable && (
               <>
@@ -327,6 +349,49 @@ export default function RichTextEditor({
 
       {/* Editor Content */}
       <EditorContent editor={editor} />
+
+      {/* Table Size Dialog */}
+      <Dialog open={tableDialogOpen} onOpenChange={setTableDialogOpen}>
+        <DialogContent className="sm:max-w-[300px]">
+          <DialogHeader>
+            <DialogTitle>Tablo Ekle</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="rows">Satır Sayısı</Label>
+                <Input
+                  id="rows"
+                  type="number"
+                  min={1}
+                  max={20}
+                  value={tableRows}
+                  onChange={(e) => setTableRows(parseInt(e.target.value) || 1)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="cols">Sütun Sayısı</Label>
+                <Input
+                  id="cols"
+                  type="number"
+                  min={1}
+                  max={20}
+                  value={tableCols}
+                  onChange={(e) => setTableCols(parseInt(e.target.value) || 1)}
+                />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setTableDialogOpen(false)}>
+              İptal
+            </Button>
+            <Button type="button" onClick={insertTable}>
+              Ekle
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
