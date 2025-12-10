@@ -122,7 +122,7 @@ export default function RichTextEditor({
 
   const insertTable = useCallback(() => {
     if (!editor) return;
-    editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run();
+    editor.chain().focus().insertTable({ rows: 5, cols: 5, withHeaderRow: true }).run();
   }, [editor]);
 
   if (!editor) {
@@ -269,7 +269,7 @@ export default function RichTextEditor({
           <DropdownMenuContent align="start">
             <DropdownMenuItem onClick={insertTable}>
               <Plus className="h-4 w-4 mr-2" />
-              Tablo Ekle (3x3)
+              Tablo Ekle (5x5)
             </DropdownMenuItem>
             {isInTable && (
               <>
