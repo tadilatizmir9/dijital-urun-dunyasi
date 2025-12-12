@@ -222,16 +222,35 @@ All colors MUST be HSL.
   width: 100% !important;
   margin-bottom: 1.25rem !important;
   border-collapse: collapse !important;
+  border-radius: 0.5rem !important;
+  overflow: hidden !important;
 }
 
 .prose th,
 .prose td {
   border: 1px solid hsl(var(--border)) !important;
-  padding: 0.75rem !important;
+  padding: 0.875rem 1rem !important;
   text-align: left !important;
 }
 
 .prose th {
-  background-color: hsl(var(--muted)) !important;
+  background-color: hsl(var(--primary)) !important;
+  color: hsl(var(--primary-foreground)) !important;
   font-weight: 600 !important;
+}
+
+.prose tbody tr:nth-child(even) {
+  background-color: hsl(var(--muted) / 0.5) !important;
+}
+
+.prose tbody tr:nth-child(odd) {
+  background-color: hsl(var(--background)) !important;
+}
+
+.prose tbody tr {
+  transition: background-color 0.15s ease !important;
+}
+
+.prose tbody tr:hover {
+  background-color: hsl(var(--primary) / 0.08) !important;
 }
