@@ -11,6 +11,7 @@ import { toast } from "@/hooks/use-toast";
 export default function BlogPost() {
   const { slug } = useParams();
   const [post, setPost] = useState<any>(null);
+  const [relatedPosts, setRelatedPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
 
@@ -50,8 +51,43 @@ export default function BlogPost() {
 
     if (data) {
       setPost(data);
+      fetchRelatedPosts(data);
     }
     setLoading(false);
+  };
+
+  const fetchRelatedPosts = async (currentPost: any) => {
+    // Fetch posts from same category or with overlapping tags
+    let query = supabase
+      .from("posts")
+      .select("id, title, slug, cover_image, excerpt, created_at, blog_categories(name, slug)")
+      .eq("status", "published")
+      .neq("id", currentPost.id)
+      .limit(3);
+
+    if (currentPost.category_id) {
+      query = query.eq("category_id", currentPost.category_id);
+    }
+
+    const { data } = await query.order("created_at", { ascending: false });
+
+    if (data && data.length > 0) {
+      setRelatedPosts(data);
+    } else if (currentPost.tags && currentPost.tags.length > 0) {
+      // Fallback: fetch posts with overlapping tags
+      const { data: tagPosts } = await supabase
+        .from("posts")
+        .select("id, title, slug, cover_image, excerpt, created_at, blog_categories(name, slug)")
+        .eq("status", "published")
+        .neq("id", currentPost.id)
+        .overlaps("tags", currentPost.tags)
+        .order("created_at", { ascending: false })
+        .limit(3);
+      
+      if (tagPosts) {
+        setRelatedPosts(tagPosts);
+      }
+    }
   };
 
   if (loading) {
@@ -209,6 +245,51 @@ export default function BlogPost() {
                 ))}
               </div>
             </div>
+          )}
+
+          {/* Related Posts */}
+          {relatedPosts.length > 0 && (
+            <section className="mt-12 pt-8 border-t border-border">
+              <h2 className="text-2xl font-bold text-foreground mb-6">İlgili Yazılar</h2>
+              <div className="grid gap-6 md:grid-cols-3">
+                {relatedPosts.map((relatedPost) => (
+                  <Link 
+                    key={relatedPost.id} 
+                    to={`/blog/${relatedPost.slug}`}
+                    className="group block"
+                  >
+                    <div className="bg-card rounded-2xl overflow-hidden border border-border hover:shadow-lg transition-shadow">
+                      {relatedPost.cover_image && (
+                        <div className="aspect-video overflow-hidden">
+                          <img
+                            src={relatedPost.cover_image}
+                            alt={relatedPost.title}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          />
+                        </div>
+                      )}
+                      <div className="p-4">
+                        {relatedPost.blog_categories?.name && (
+                          <Badge variant="secondary" className="mb-2 text-xs">
+                            {relatedPost.blog_categories.name}
+                          </Badge>
+                        )}
+                        <h3 className="font-bold text-foreground group-hover:text-primary transition-colors line-clamp-2">
+                          {relatedPost.title}
+                        </h3>
+                        <time className="text-xs text-muted-foreground mt-2 block">
+                          {new Date(relatedPost.created_at).toLocaleDateString("tr-TR", {
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
+                          })}
+                        </time>
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </section>
           )}
 
           {/* Dahili Linkleme - Daha Fazla İçerik Keşfet */}
