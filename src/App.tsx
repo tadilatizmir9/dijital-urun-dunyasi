@@ -26,6 +26,8 @@ import AdminAddBlog from "./pages/admin/AdminAddBlog";
 import AdminEditBlog from "./pages/admin/AdminEditBlog";
 import AdminCategories from "./pages/admin/AdminCategories";
 import AdminSubcategories from "./pages/admin/AdminSubcategories";
+import AdminMessages from "./pages/admin/AdminMessages";
+import Contact from "./pages/Contact";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -50,6 +52,7 @@ const App = () => (
               <Route path="blog-duzenle/:id" element={<AdminEditBlog />} />
               <Route path="kategoriler" element={<AdminCategories />} />
               <Route path="kategoriler/:categoryId/alt-kategoriler" element={<AdminSubcategories />} />
+              <Route path="mesajlar" element={<AdminMessages />} />
             </Route>
 
             {/* Public Routes (with Header/Footer) */}
@@ -68,6 +71,7 @@ const App = () => (
                     <Route path="/favoriler" element={<Favorites />} />
                     <Route path="/blog" element={<Blog />} />
                     <Route path="/blog/:slug" element={<BlogPost />} />
+                    <Route path="/iletisim" element={<Contact />} />
                     <Route path="/go/:slug" element={<Redirect />} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>

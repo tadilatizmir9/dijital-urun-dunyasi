@@ -9,6 +9,7 @@ import {
   BookOpen,
   FolderOpen,
   LogOut,
+  MessageSquare,
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
@@ -87,6 +88,11 @@ export default function AdminLayout() {
       title: "Kategoriler",
       href: "/admin/kategoriler",
       icon: FolderOpen,
+    },
+    {
+      title: "Mesajlar",
+      href: "/admin/mesajlar",
+      icon: MessageSquare,
     },
   ];
 
