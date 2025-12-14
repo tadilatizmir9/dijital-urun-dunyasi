@@ -252,7 +252,7 @@ export default function Home() {
                   <Lottie
                     animationData={emailAnimation}
                     loop={true}
-                    className="w-56 h-56"
+                    className="w-[21rem] h-[21rem]"
                   />
                 </div>
               </div>
