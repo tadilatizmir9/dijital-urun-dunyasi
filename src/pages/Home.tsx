@@ -220,7 +220,7 @@ export default function Home() {
         <section className="py-20 sm:py-28">
           <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="relative overflow-hidden rounded-3xl bg-primary p-12 sm:p-16 shadow-2xl">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+              <div className="grid grid-cols-1 lg:grid-cols-[1fr_200px] gap-8 items-center">
                 {/* Content */}
                 <div className="space-y-6 text-white">
                   <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold">
@@ -233,7 +233,7 @@ export default function Home() {
                     <Input
                       type="email"
                       placeholder="E-posta adresin"
-                      className="h-14 rounded-full bg-white/20 border-white/30 text-white placeholder:text-white/70 backdrop-blur-sm text-lg focus:bg-white/30 transition-colors"
+                      className="h-14 flex-1 rounded-full bg-white/20 border-white/30 text-white placeholder:text-white/70 backdrop-blur-sm text-lg focus:bg-white/30 transition-colors"
                     />
                     <Button 
                       type="submit" 
@@ -251,7 +251,7 @@ export default function Home() {
                   <img
                     src={newsletterImage}
                     alt="Dijitalstok newsletter görseli"
-                    className="w-full max-w-md object-contain drop-shadow-2xl"
+                    className="w-32 h-32 object-contain opacity-90"
                   />
                 </div>
               </div>
