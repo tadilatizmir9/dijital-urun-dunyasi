@@ -9,7 +9,8 @@ import { CategoryCard } from "@/components/categories/CategoryCard";
 import { SearchAutocomplete } from "@/components/search/SearchAutocomplete";
 import { supabase } from "@/lib/supabaseClient";
 import { Helmet } from "react-helmet-async";
-import newsletterImage from "@/assets/newsletter-hero.png";
+import Lottie from "lottie-react";
+import emailAnimation from "@/assets/email-animation.json";
 
 export default function Home() {
   const navigate = useNavigate();
@@ -246,12 +247,12 @@ export default function Home() {
                   </form>
                 </div>
                 
-                {/* Image */}
+                {/* Animation */}
                 <div className="hidden lg:flex justify-center">
-                  <img
-                    src={newsletterImage}
-                    alt="Dijitalstok newsletter görseli"
-                    className="w-32 h-32 object-contain opacity-90"
+                  <Lottie
+                    animationData={emailAnimation}
+                    loop={true}
+                    className="w-40 h-40"
                   />
                 </div>
               </div>
