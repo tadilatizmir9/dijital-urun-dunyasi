@@ -221,7 +221,7 @@ export default function Home() {
         <section className="py-20 sm:py-28">
           <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="relative overflow-hidden rounded-3xl bg-primary p-12 sm:p-16 shadow-2xl">
-              <div className="grid grid-cols-1 lg:grid-cols-[1fr_200px] gap-8 items-center">
+              <div className="grid grid-cols-1 lg:grid-cols-[1fr_350px] gap-8 items-center">
                 {/* Content */}
                 <div className="space-y-6 text-white">
                   <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold">
