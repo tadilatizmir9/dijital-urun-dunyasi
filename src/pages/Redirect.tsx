@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { supabase } from "@/lib/supabaseClient";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 
@@ -16,28 +15,25 @@ export default function Redirect() {
 
   const handleRedirect = async () => {
     try {
-      // Fetch redirect info
-      const { data, error: fetchError } = await supabase
-        .from("redirects")
-        .select("target_url, click_count")
-        .eq("slug", slug)
-        .single();
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/track-click`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
+            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+          },
+          body: JSON.stringify({ slug }),
+        }
+      );
 
-      if (fetchError || !data) {
+      if (!res.ok) {
         setError(true);
         return;
       }
 
-      // Update click count
-      await supabase
-        .from("redirects")
-        .update({
-          click_count: (data.click_count || 0) + 1,
-          last_checked_at: new Date().toISOString(),
-        })
-        .eq("slug", slug);
-
-      // Redirect to target URL
+      const data = await res.json();
       window.location.href = data.target_url;
     } catch (err) {
       setError(true);
