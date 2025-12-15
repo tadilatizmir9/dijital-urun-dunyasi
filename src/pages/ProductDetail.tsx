@@ -3,7 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import { supabase } from "@/lib/supabaseClient";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Helmet } from "react-helmet-async";
+import { Seo } from "@/components/Seo";
 import { ArrowLeft, ExternalLink } from "lucide-react";
 import { SimilarProducts } from "@/components/products/SimilarProducts";
 
@@ -66,13 +66,12 @@ export default function ProductDetail() {
 
   return (
     <>
-      <Helmet>
-        <title>{product.title} – Dijitalstok</title>
-        <meta
-          name="description"
-          content={product.description?.substring(0, 150) || product.title}
-        />
-      </Helmet>
+      <Seo
+        title={`${product.title} – Dijitalstok`}
+        description={product.description?.substring(0, 150) || product.title}
+        ogTitle={product.title}
+        ogDescription={product.description?.substring(0, 150) || product.title}
+      />
 
       <main className="min-h-screen bg-background py-12">
         <div className="container mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">

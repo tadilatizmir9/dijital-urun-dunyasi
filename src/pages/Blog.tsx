@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { BlogCard } from "@/components/blog/BlogCard";
 import { supabase } from "@/lib/supabaseClient";
-import { Helmet } from "react-helmet-async";
+import { Seo } from "@/components/Seo";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
@@ -101,13 +101,10 @@ export default function Blog() {
 
   return (
     <>
-      <Helmet>
-        <title>Blog – Dijitalstok</title>
-        <meta
-          name="description"
-          content="Dijital ürünler, tasarım kaynakları ve içerik üretimi üzerine yazılar – Dijitalstok Blog."
-        />
-      </Helmet>
+      <Seo
+        title="Blog – Dijitalstok"
+        description="Dijital ürünler, tasarım kaynakları ve içerik üretimi üzerine yazılar – Dijitalstok Blog."
+      />
 
       <main className="min-h-screen bg-background py-12">
         <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">

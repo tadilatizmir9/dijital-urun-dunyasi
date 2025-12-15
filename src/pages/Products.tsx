@@ -3,7 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import { ProductCard } from "@/components/products/ProductCard";
 import { ProductFilters, FilterState } from "@/components/filters/ProductFilters";
 import { supabase } from "@/lib/supabaseClient";
-import { Helmet } from "react-helmet-async";
+import { Seo } from "@/components/Seo";
 import { Button } from "@/components/ui/button";
 
 export default function Products() {
@@ -110,13 +110,10 @@ export default function Products() {
 
   return (
     <>
-      <Helmet>
-        <title>Tüm dijital ürünler – Dijitalstok</title>
-        <meta
-          name="description"
-          content="Mockup, şablon, preset, icon pack ve daha fazlasını içeren tüm dijital ürünleri Dijitalstok üzerinde keşfedin."
-        />
-      </Helmet>
+      <Seo
+        title="Tüm dijital ürünler – Dijitalstok"
+        description="Mockup, şablon, preset, icon pack ve daha fazlasını içeren tüm dijital ürünleri Dijitalstok üzerinde keşfedin."
+      />
 
       <main className="min-h-screen bg-background py-12">
         <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">

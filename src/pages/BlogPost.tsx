@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { supabase } from "@/lib/supabaseClient";
-import { Helmet } from "react-helmet-async";
+import { Seo } from "@/components/Seo";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Share2, Twitter, Facebook, Linkedin, Link2, Check } from "lucide-react";
@@ -113,13 +113,12 @@ export default function BlogPost() {
 
   return (
     <>
-      <Helmet>
-        <title>{post.meta_title || post.title} – Dijitalstok Blog</title>
-        <meta
-          name="description"
-          content={post.meta_description || post.excerpt || post.title}
-        />
-      </Helmet>
+      <Seo
+        title={`${post.meta_title || post.title} – Dijitalstok Blog`}
+        description={post.meta_description || post.excerpt || post.title}
+        ogTitle={post.meta_title || post.title}
+        ogDescription={post.meta_description || post.excerpt || post.title}
+      />
 
       <main className="min-h-screen bg-background py-12">
         <article className="container mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">

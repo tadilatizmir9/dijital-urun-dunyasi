@@ -8,7 +8,7 @@ import { BlogCard } from "@/components/blog/BlogCard";
 import { CategoryCard } from "@/components/categories/CategoryCard";
 import { SearchAutocomplete } from "@/components/search/SearchAutocomplete";
 import { supabase } from "@/lib/supabaseClient";
-import { Helmet } from "react-helmet-async";
+import { Seo } from "@/components/Seo";
 import Lottie from "lottie-react";
 import emailAnimation from "@/assets/email-animation.json";
 
@@ -66,13 +66,10 @@ export default function Home() {
 
   return (
     <>
-      <Helmet>
-        <title>Dijitalstok – Mockup, şablon ve dijital stok içerik kataloğu</title>
-        <meta
-          name="description"
-          content="Dijitalstok, mockup, Canva şablonları, presetler, icon setleri ve yaratıcı dijital stok içeriklerini bir arada keşfedebileceğiniz ücretsiz bir katalogdur."
-        />
-      </Helmet>
+      <Seo
+        title="Dijitalstok – Mockup, şablon ve dijital stok içerik kataloğu"
+        description="Dijitalstok, mockup, Canva şablonları, presetler, icon setleri ve yaratıcı dijital stok içeriklerini bir arada keşfedebileceğiniz ücretsiz bir katalogdur."
+      />
 
       <main className="min-h-screen bg-background">
         {/* Hero Section */}

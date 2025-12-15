@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 
@@ -62,16 +63,22 @@ export default function Redirect() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col items-center justify-center">
-      <div className="text-center space-y-6">
-        <Loader2 className="h-16 w-16 animate-spin text-primary mx-auto" />
-        <h1 className="text-2xl font-bold text-foreground">
-          Yönlendiriliyorsunuz...
-        </h1>
-        <p className="text-muted-foreground">
-          Lütfen bekleyin, orijinal siteye yönlendiriliyorsunuz.
-        </p>
+    <>
+      <Helmet>
+        <title>Yönlendiriliyorsunuz...</title>
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center">
+        <div className="text-center space-y-6">
+          <Loader2 className="h-16 w-16 animate-spin text-primary mx-auto" />
+          <h1 className="text-2xl font-bold text-foreground">
+            Yönlendiriliyorsunuz...
+          </h1>
+          <p className="text-muted-foreground">
+            Lütfen bekleyin, orijinal siteye yönlendiriliyorsunuz.
+          </p>
+        </div>
       </div>
-    </div>
+    </>
   );
 }

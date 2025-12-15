@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { CategoryCard } from "@/components/categories/CategoryCard";
 import { supabase } from "@/lib/supabaseClient";
-import { Helmet } from "react-helmet-async";
+import { Seo } from "@/components/Seo";
 
 export default function Categories() {
   const [categories, setCategories] = useState<any[]>([]);
@@ -25,10 +25,10 @@ export default function Categories() {
 
   return (
     <>
-      <Helmet>
-        <title>Kategoriler – Dijitalstok</title>
-        <meta name="description" content="Tüm dijital ürün kategorilerini keşfedin." />
-      </Helmet>
+      <Seo
+        title="Kategoriler – Dijitalstok"
+        description="Tüm dijital ürün kategorilerini keşfedin."
+      />
 
       <div className="min-h-screen bg-background py-12">
         <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
