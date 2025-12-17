@@ -28,7 +28,9 @@ import AdminCategories from "./pages/admin/AdminCategories";
 import AdminSubcategories from "./pages/admin/AdminSubcategories";
 import AdminMessages from "./pages/admin/AdminMessages";
 import Contact from "./pages/Contact";
+import CerezPolitikasi from "./pages/CerezPolitikasi";
 import NotFound from "./pages/NotFound";
+import { CookieConsent } from "@/components/CookieConsent";
 
 const queryClient = new QueryClient();
 
@@ -72,10 +74,12 @@ const App = () => (
                     <Route path="/blog" element={<Blog />} />
                     <Route path="/blog/:slug" element={<BlogPost />} />
                     <Route path="/iletisim" element={<Contact />} />
+                    <Route path="/cerez-politikasi" element={<CerezPolitikasi />} />
                     <Route path="/go/:slug" element={<Redirect />} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                   <Footer />
+                  <CookieConsent />
                 </>
               }
             />

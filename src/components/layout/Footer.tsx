@@ -60,6 +60,11 @@ export const Footer = () => {
                   Affiliate Bildirimi
                 </Link>
               </li>
+              <li>
+                <Link to="/cerez-politikasi" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                  Çerez Politikası
+                </Link>
+              </li>
             </ul>
           </div>
         </div>
