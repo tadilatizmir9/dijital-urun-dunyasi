@@ -6,7 +6,7 @@ import { useFavorites } from "@/hooks/useFavorites";
 
 interface ProductCardProps {
   id: string;
-  slug: string;
+  slug?: string | null;
   title: string;
   description?: string;
   image_url?: string;
@@ -32,10 +32,12 @@ export const ProductCard = ({
     toggleFavorite(id);
   };
 
+  const productPath = `/urun/${slug && slug.trim() ? slug : id}`;
+
   return (
     <div className="group block relative">
       <Link 
-        to={`/urun/${slug}`}
+        to={productPath}
         className="block"
       >
         <div className="relative overflow-hidden rounded-2xl bg-card border border-border transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:border-purple/50">

@@ -25,6 +25,7 @@ import {
 import { toast } from "@/hooks/use-toast";
 import { ArrowLeft } from "lucide-react";
 import { Helmet } from "react-helmet-async";
+import slugify from "@/lib/slugify";
 
 export default function AdminAddProduct() {
   const navigate = useNavigate();
@@ -33,12 +34,14 @@ export default function AdminAddProduct() {
   const [loading, setLoading] = useState(false);
   const [categories, setCategories] = useState<any[]>([]);
   const [subcategories, setSubcategories] = useState<any[]>([]);
+  const [slugManuallyEdited, setSlugManuallyEdited] = useState(false);
   const [similarProductDialog, setSimilarProductDialog] = useState<{
     open: boolean;
     existingTitle: string | null;
   }>({ open: false, existingTitle: null });
   const [formData, setFormData] = useState({
     title: "",
+    slug: "",
     description: "",
     image_url: "",
     image_url_2: "",
@@ -95,6 +98,7 @@ export default function AdminAddProduct() {
     if (data) {
       setFormData({
         title: data.title,
+        slug: (data as any).slug || "",
         description: data.description || "",
         image_url: data.image_url || "",
         image_url_2: data.image_url_2 || "",
@@ -103,6 +107,7 @@ export default function AdminAddProduct() {
         tags: data.tags ? data.tags.join(", ") : "",
         affiliate_url: data.affiliate_url,
       });
+      setSlugManuallyEdited(false); // Reset on edit mode load
       
       // Alt kategorileri yükle
       if (data.category_id) {
@@ -153,29 +158,45 @@ export default function AdminAddProduct() {
     return null;
   };
 
-  const generateSlug = (title: string) => {
-    return title
-      .toLowerCase()
-      .replace(/ğ/g, "g")
-      .replace(/ü/g, "u")
-      .replace(/ş/g, "s")
-      .replace(/ı/g, "i")
-      .replace(/ö/g, "o")
-      .replace(/ç/g, "c")
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/(^-|-$)/g, "")
-      + "-" + Math.random().toString(36).substring(2, 7);
+  const handleTitleChange = (title: string) => {
+    const newFormData = { ...formData, title };
+    
+    // Auto-generate slug if user hasn't manually edited it and title exists
+    if (!slugManuallyEdited && title.trim()) {
+      newFormData.slug = slugify(title);
+    }
+    
+    setFormData(newFormData);
+  };
+
+  const handleSlugChange = (slug: string) => {
+    setSlugManuallyEdited(true);
+    setFormData({ ...formData, slug: slug.trim() });
   };
 
   const performInsert = async () => {
     setLoading(true);
 
     try {
-      // Insert product
+      // Ensure slug exists (generate from title if empty)
+      const finalSlug = formData.slug?.trim() || slugify(formData.title);
+      
+      if (!finalSlug) {
+        toast({
+          variant: "destructive",
+          title: "Hata",
+          description: "Slug oluşturulamadı. Lütfen başlık girin.",
+        });
+        setLoading(false);
+        return;
+      }
+
+      // Insert product with slug
       const { data: product, error: productError } = await supabase
         .from("products")
         .insert({
           title: formData.title,
+          slug: finalSlug,
           description: formData.description,
           image_url: formData.image_url,
           image_url_2: formData.image_url_2,
@@ -191,11 +212,10 @@ export default function AdminAddProduct() {
 
       if (productError) throw productError;
 
-      // Insert redirect
-      const slug = generateSlug(formData.title);
+      // Insert redirect (use same slug for redirects table)
       const { error: redirectError } = await supabase.from("redirects").insert({
         product_id: product.id,
-        slug: slug,
+        slug: finalSlug,
         target_url: formData.affiliate_url,
         click_count: 0,
       });
@@ -222,15 +242,39 @@ export default function AdminAddProduct() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Validate title
+    if (!formData.title.trim()) {
+      toast({
+        variant: "destructive",
+        title: "Hata",
+        description: "Lütfen bir başlık girin.",
+      });
+      return;
+    }
+
     if (isEditMode) {
       // Update product - no duplicate check needed
       setLoading(true);
 
       try {
+        // Ensure slug exists (use existing, user input, or generate from title)
+        const finalSlug = formData.slug?.trim() || slugify(formData.title);
+        
+        if (!finalSlug) {
+          toast({
+            variant: "destructive",
+            title: "Hata",
+            description: "Slug oluşturulamadı. Lütfen geçerli bir başlık girin.",
+          });
+          setLoading(false);
+          return;
+        }
+
         const { error: productError } = await supabase
           .from("products")
           .update({
             title: formData.title,
+            slug: finalSlug,
             description: formData.description,
             image_url: formData.image_url,
             image_url_2: formData.image_url_2,
@@ -245,10 +289,13 @@ export default function AdminAddProduct() {
 
         if (productError) throw productError;
 
-        // Update redirect target_url
+        // Update redirect slug and target_url
         const { error: redirectError } = await supabase
           .from("redirects")
-          .update({ target_url: formData.affiliate_url })
+          .update({ 
+            slug: finalSlug,
+            target_url: formData.affiliate_url 
+          })
           .eq("product_id", id);
 
         if (redirectError) throw redirectError;
@@ -269,7 +316,18 @@ export default function AdminAddProduct() {
         setLoading(false);
       }
     } else {
-      // Insert mode: check for similar products first
+      // Insert mode: validate slug
+      const finalSlug = formData.slug?.trim() || slugify(formData.title);
+      if (!finalSlug) {
+        toast({
+          variant: "destructive",
+          title: "Hata",
+          description: "Slug oluşturulamadı. Lütfen geçerli bir başlık girin.",
+        });
+        return;
+      }
+
+      // Check for similar products first
       const similarProductTitle = await checkSimilarProducts(formData.title);
 
       if (similarProductTitle) {
@@ -317,9 +375,22 @@ export default function AdminAddProduct() {
           <Input
             id="title"
             value={formData.title}
-            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+            onChange={(e) => handleTitleChange(e.target.value)}
             required
           />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="slug">Slug (otomatik oluşturulur, opsiyonel)</Label>
+          <Input
+            id="slug"
+            value={formData.slug}
+            onChange={(e) => handleSlugChange(e.target.value)}
+            placeholder="URL'de görünecek: /urun/{slug}"
+          />
+          <p className="text-xs text-muted-foreground">
+            Başlık değiştiğinde otomatik oluşturulur. İsterseniz manuel olarak düzenleyebilirsiniz.
+          </p>
         </div>
 
         <div className="space-y-2">

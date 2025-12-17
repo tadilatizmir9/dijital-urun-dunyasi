@@ -12,7 +12,7 @@ interface SearchAutocompleteProps {
 
 interface ProductSuggestion {
   id: string;
-  slug: string;
+  slug?: string | null;
   title: string;
   image_url?: string;
 }
@@ -91,9 +91,10 @@ export const SearchAutocomplete = ({ value, onChange, onSearch }: SearchAutocomp
     }
   };
 
-  const handleProductClick = (productSlug: string) => {
+  const handleProductClick = (productId: string, productSlug?: string | null) => {
     setIsOpen(false);
-    navigate(`/urun/${productSlug}`);
+    const productPath = `/urun/${productSlug && productSlug.trim() ? productSlug : productId}`;
+    navigate(productPath);
   };
 
   const handleCategoryClick = (categorySlug: string) => {
@@ -172,7 +173,7 @@ export const SearchAutocomplete = ({ value, onChange, onSearch }: SearchAutocomp
                 {products.map((product) => (
                   <button
                     key={product.id}
-                    onClick={() => handleProductClick(product.slug)}
+                    onClick={() => handleProductClick(product.id, product.slug)}
                     className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-muted rounded-xl transition-all duration-200 group"
                   >
                     {product.image_url ? (

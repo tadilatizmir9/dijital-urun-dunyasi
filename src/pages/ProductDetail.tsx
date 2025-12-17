@@ -52,7 +52,7 @@ export default function ProductDetail() {
         return;
       }
 
-      if (productData && productData.slug) {
+      if (productData && productData.slug && productData.slug.trim()) {
         // Redirect to slug-based URL using React Router
         navigate(`/urun/${productData.slug}`, { replace: true });
         return;
@@ -219,7 +219,7 @@ export default function ProductDetail() {
 
           {/* Benzer Ürünler */}
           <SimilarProducts
-            currentProductSlug={product.slug}
+            currentProductSlug={(product.slug && product.slug.trim()) ? product.slug : product.id}
             categoryId={product.category_id}
             tags={product.tags}
           />

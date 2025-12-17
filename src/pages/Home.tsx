@@ -1,12 +1,10 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/products/ProductCard";
 import { BlogCard } from "@/components/blog/BlogCard";
 import { CategoryCard } from "@/components/categories/CategoryCard";
 import { SearchAutocomplete } from "@/components/search/SearchAutocomplete";
+import { BeehiivSubscribe } from "@/components/BeehiivSubscribe";
 import { supabase } from "@/lib/supabaseClient";
 import { Seo } from "@/components/Seo";
 import Lottie from "lottie-react";
@@ -229,21 +227,9 @@ export default function Home() {
                   <p className="text-xl text-white/95 leading-relaxed">
                     Ücretsiz mail olarak almak ister misin? Hemen abone ol, hiçbir fırsatı kaçırma!
                   </p>
-                  <form className="flex flex-col sm:flex-row gap-3 pt-4">
-                    <Input
-                      type="email"
-                      placeholder="E-posta adresin"
-                      className="h-14 flex-1 rounded-full bg-white/20 border-white/30 text-white placeholder:text-white/70 backdrop-blur-sm text-lg focus:bg-white/30 transition-colors"
-                    />
-                    <Button 
-                      type="submit" 
-                      size="lg" 
-                      variant="secondary" 
-                      className="rounded-full h-14 px-8 font-semibold bg-secondary text-secondary-foreground hover:bg-secondary/90 hover:shadow-lg transition-all duration-300 whitespace-nowrap"
-                    >
-                      Abone Ol
-                    </Button>
-                  </form>
+                  <div className="pt-4">
+                    <BeehiivSubscribe />
+                  </div>
                 </div>
                 
                 {/* Animation */}
