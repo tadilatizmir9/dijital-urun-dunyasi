@@ -12,6 +12,7 @@ interface SearchAutocompleteProps {
 
 interface ProductSuggestion {
   id: string;
+  slug: string;
   title: string;
   image_url?: string;
 }
@@ -61,7 +62,7 @@ export const SearchAutocomplete = ({ value, onChange, onSearch }: SearchAutocomp
     // Fetch products
     const { data: productsData, error: productsError } = await supabase
       .from("products")
-      .select("id, title, image_url")
+      .select("id, slug, title, image_url")
       .or(`title.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%`)
       .limit(5);
 
@@ -90,9 +91,9 @@ export const SearchAutocomplete = ({ value, onChange, onSearch }: SearchAutocomp
     }
   };
 
-  const handleProductClick = (productId: string) => {
+  const handleProductClick = (productSlug: string) => {
     setIsOpen(false);
-    navigate(`/urun/${productId}`);
+    navigate(`/urun/${productSlug}`);
   };
 
   const handleCategoryClick = (categorySlug: string) => {
@@ -171,7 +172,7 @@ export const SearchAutocomplete = ({ value, onChange, onSearch }: SearchAutocomp
                 {products.map((product) => (
                   <button
                     key={product.id}
-                    onClick={() => handleProductClick(product.id)}
+                    onClick={() => handleProductClick(product.slug)}
                     className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-muted rounded-xl transition-all duration-200 group"
                   >
                     {product.image_url ? (

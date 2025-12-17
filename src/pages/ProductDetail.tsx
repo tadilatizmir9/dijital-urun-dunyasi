@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabaseClient";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -7,23 +7,68 @@ import { Seo } from "@/components/Seo";
 import { ArrowLeft, ExternalLink } from "lucide-react";
 import { SimilarProducts } from "@/components/products/SimilarProducts";
 
+// UUID format: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+const isUUID = (str: string): boolean => {
+  return UUID_REGEX.test(str);
+};
+
 export default function ProductDetail() {
-  const { id } = useParams();
+  const { slug } = useParams();
+  const navigate = useNavigate();
   const [product, setProduct] = useState<any>(null);
   const [redirect, setRedirect] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
 
   useEffect(() => {
-    if (id) {
-      fetchProduct();
-    }
-  }, [id]);
+    if (!slug) return;
+
+    console.log("Product slug:", slug);
+    fetchProduct();
+  }, [slug]);
 
   const fetchProduct = async () => {
+    if (!slug) {
+      setLoading(false);
+      setNotFound(true);
+      return;
+    }
+
+    // Check if slug is a UUID (backward compatibility)
+    if (isUUID(slug)) {
+      // Fetch only slug by ID for old UUID-based URLs
+      const { data: productData, error: byIdErr } = await supabase
+        .from("products")
+        .select("slug")
+        .eq("id", slug)
+        .maybeSingle();
+
+      if (byIdErr) {
+        console.error("Error fetching product by ID:", byIdErr);
+        setLoading(false);
+        setNotFound(true);
+        return;
+      }
+
+      if (productData && productData.slug) {
+        // Redirect to slug-based URL using React Router
+        navigate(`/urun/${productData.slug}`, { replace: true });
+        return;
+      } else {
+        // Product not found by ID
+        setLoading(false);
+        setNotFound(true);
+        return;
+      }
+    }
+
+    // Normal slug-based lookup
     const { data: productData } = await supabase
       .from("products")
       .select("*, categories(name, slug)")
-      .eq("id", id)
+      .eq("slug", slug)
       .single();
 
     if (productData) {
@@ -33,12 +78,14 @@ export default function ProductDetail() {
       const { data: redirectData } = await supabase
         .from("redirects")
         .select("slug")
-        .eq("product_id", id)
+        .eq("product_id", productData.id)
         .single();
 
       if (redirectData) {
         setRedirect(redirectData);
       }
+    } else {
+      setNotFound(true);
     }
     setLoading(false);
   };
@@ -51,7 +98,7 @@ export default function ProductDetail() {
     );
   }
 
-  if (!product) {
+  if (notFound || !product) {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center">
         <p className="text-muted-foreground mb-4">Ürün bulunamadı.</p>
@@ -172,7 +219,7 @@ export default function ProductDetail() {
 
           {/* Benzer Ürünler */}
           <SimilarProducts
-            currentProductId={product.id}
+            currentProductSlug={product.slug}
             categoryId={product.category_id}
             tags={product.tags}
           />

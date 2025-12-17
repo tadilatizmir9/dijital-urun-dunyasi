@@ -3,13 +3,13 @@ import { supabase } from "@/lib/supabaseClient";
 import { ProductCard } from "./ProductCard";
 
 interface SimilarProductsProps {
-  currentProductId: string;
+  currentProductSlug: string;
   categoryId?: string;
   tags?: string[];
 }
 
 export const SimilarProducts = ({
-  currentProductId,
+  currentProductSlug,
   categoryId,
   tags,
 }: SimilarProductsProps) => {
@@ -18,14 +18,14 @@ export const SimilarProducts = ({
 
   useEffect(() => {
     fetchSimilarProducts();
-  }, [currentProductId, categoryId, tags]);
+  }, [currentProductSlug, categoryId, tags]);
 
   const fetchSimilarProducts = async () => {
     try {
       let query = supabase
         .from("products")
         .select("*, categories(name)")
-        .neq("id", currentProductId)
+        .neq("slug", currentProductSlug)
         .limit(4);
 
       // Önce aynı kategorideki ürünleri dene
@@ -43,7 +43,7 @@ export const SimilarProducts = ({
           const { data: tagProducts } = await supabase
             .from("products")
             .select("*, categories(name)")
-            .neq("id", currentProductId)
+            .neq("slug", currentProductSlug)
             .limit(4);
 
           if (tagProducts) {
@@ -75,7 +75,7 @@ export const SimilarProducts = ({
         const { data: allProducts } = await supabase
           .from("products")
           .select("*, categories(name)")
-          .neq("id", currentProductId)
+          .neq("slug", currentProductSlug)
           .limit(8);
 
         if (allProducts && tags && tags.length > 0) {
@@ -124,6 +124,7 @@ export const SimilarProducts = ({
             <ProductCard
               key={product.id}
               id={product.id}
+              slug={product.slug}
               title={product.title}
               description={product.description}
               image_url={product.image_url}

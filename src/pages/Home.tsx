@@ -159,6 +159,7 @@ export default function Home() {
                   <ProductCard
                     key={product.id}
                     id={product.id}
+                    slug={product.slug}
                     title={product.title}
                     description={product.description}
                     image_url={product.image_url}
@@ -181,6 +182,7 @@ export default function Home() {
                   <ProductCard
                     key={product.id}
                     id={product.id}
+                    slug={product.slug}
                     title={product.title}
                     description={product.description}
                     image_url={product.image_url}
