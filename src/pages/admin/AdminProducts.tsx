@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/lib/supabaseClient";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -10,7 +11,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, Trash2, Pencil, Star } from "lucide-react";
+import { Plus, Trash2, Pencil, Star, Search, X } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "@/hooks/use-toast";
 import { Helmet } from "react-helmet-async";
@@ -18,21 +19,76 @@ import { Helmet } from "react-helmet-async";
 export default function AdminProducts() {
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     fetchProducts();
   }, []);
 
-  const fetchProducts = async () => {
-    const { data } = await supabase
-      .from("products")
-      .select("*, categories(name)")
-      .order("created_at", { ascending: false });
+  // Debounced search effect
+  useEffect(() => {
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
 
-    if (data) {
+    debounceTimerRef.current = setTimeout(() => {
+      fetchProducts(searchTerm);
+    }, 350);
+
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, [searchTerm]);
+
+  const fetchProducts = async (searchQuery?: string) => {
+    setLoading(true);
+    
+    let query = supabase
+      .from("products")
+      .select("*, categories(name)");
+
+    // Apply search filter if search query exists
+    if (searchQuery && searchQuery.trim().length > 0) {
+      const trimmedTerm = searchQuery.trim();
+      // Search by title OR slug (case-insensitive)
+      query = query.or(`title.ilike.%${trimmedTerm}%,slug.ilike.%${trimmedTerm}%`);
+    }
+
+    query = query.order("created_at", { ascending: false });
+
+    const { data, error } = await query;
+
+    if (error) {
+      console.error("Search error:", error);
+      // If slug column doesn't exist, fall back to title-only search
+      if (error.message?.includes("slug") || error.message?.includes("column")) {
+        const trimmedTerm = searchQuery?.trim() || "";
+        const { data: fallbackData } = await supabase
+          .from("products")
+          .select("*, categories(name)")
+          .ilike("title", `%${trimmedTerm}%`)
+          .order("created_at", { ascending: false });
+        if (fallbackData) {
+          setProducts(fallbackData);
+        }
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Hata",
+          description: "Ürünler yüklenirken bir hata oluştu.",
+        });
+      }
+    } else if (data) {
       setProducts(data);
     }
     setLoading(false);
+  };
+
+  const handleClearSearch = () => {
+    setSearchTerm("");
   };
 
   const handleToggleFeatured = async (id: string, currentValue: boolean) => {
@@ -74,7 +130,7 @@ export default function AdminProducts() {
       description: "Ürün silindi.",
     });
 
-    fetchProducts();
+    fetchProducts(searchTerm);
   };
 
   return (
@@ -97,10 +153,36 @@ export default function AdminProducts() {
         </Link>
       </div>
 
+      {/* Search Input */}
+      <div className="relative max-w-md">
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Input
+          type="text"
+          placeholder="Ürün adı veya slug ile ara..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="pl-10 pr-10 rounded-full"
+        />
+        {searchTerm && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute right-1 top-1/2 transform -translate-y-1/2 h-8 w-8 rounded-full"
+            onClick={handleClearSearch}
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        )}
+      </div>
+
       {loading ? (
         <p className="text-muted-foreground">Yükleniyor...</p>
       ) : products.length === 0 ? (
-        <p className="text-muted-foreground">Henüz ürün yok.</p>
+        <p className="text-muted-foreground">
+          {searchTerm
+            ? `"${searchTerm}" için sonuç bulunamadı.`
+            : "Henüz ürün yok."}
+        </p>
       ) : (
         <div className="rounded-lg border border-border bg-card">
           <Table>
