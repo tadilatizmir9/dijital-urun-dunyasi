@@ -4,11 +4,20 @@ import { ProductCard } from "@/components/products/ProductCard";
 import { ProductFilters, FilterState } from "@/components/filters/ProductFilters";
 import { supabase } from "@/lib/supabaseClient";
 import { Helmet } from "react-helmet-async";
+import { Button } from "@/components/ui/button";
+
+interface Subcategory {
+  id: string;
+  name: string;
+  slug: string;
+}
 
 export default function Category() {
   const { slug } = useParams();
   const [category, setCategory] = useState<any>(null);
   const [products, setProducts] = useState<any[]>([]);
+  const [subcategories, setSubcategories] = useState<Subcategory[]>([]);
+  const [selectedSubcategoryId, setSelectedSubcategoryId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState<FilterState>({
     categoryId: null,
@@ -35,7 +44,27 @@ export default function Category() {
     fetchCategory();
   }, [slug]);
 
-  // Ürünleri kategori veya filtreler değiştiğinde çek
+  // Alt kategorileri kategori yüklendiğinde çek
+  useEffect(() => {
+    const fetchSubcategories = async () => {
+      if (category?.id) {
+        const { data: subcategoriesData } = await supabase
+          .from("subcategories")
+          .select("id, name, slug")
+          .eq("parent_category_id", category.id)
+          .order("name");
+        if (subcategoriesData) setSubcategories(subcategoriesData);
+      } else {
+        setSubcategories([]);
+      }
+      // Reset selected subcategory when category changes
+      setSelectedSubcategoryId(null);
+    };
+
+    fetchSubcategories();
+  }, [category]);
+
+  // Ürünleri kategori, alt kategori veya filtreler değiştiğinde çek
   useEffect(() => {
     const fetchProducts = async () => {
       if (!category) return;
@@ -46,6 +75,11 @@ export default function Category() {
         .from("products")
         .select("*, categories(name)")
         .eq("category_id", category.id);
+
+      // Alt kategori filtresi
+      if (selectedSubcategoryId) {
+        query = query.eq("subcategory_id", selectedSubcategoryId);
+      }
 
       // Sıralama
       switch (filters.sortBy) {
@@ -82,7 +116,7 @@ export default function Category() {
     };
 
     fetchProducts();
-  }, [category, filters]);
+  }, [category, selectedSubcategoryId, filters]);
 
   const handleFilterChange = (newFilters: FilterState) => {
     // Aynı filtreler tekrar geliyorsa state'i güncelleyip yeniden fetch etme
@@ -134,6 +168,36 @@ export default function Category() {
               {products.length} ürün bulundu
             </h2>
           </div>
+
+          {/* Alt Kategori Filtreleri */}
+          {subcategories.length > 0 && (
+            <div className="mb-6">
+              <div className="flex flex-wrap gap-2 items-center">
+                <span className="text-sm font-medium text-muted-foreground mr-2">
+                  Alt Kategoriler:
+                </span>
+                <Button
+                  variant={!selectedSubcategoryId ? "default" : "outline"}
+                  size="sm"
+                  className="rounded-full"
+                  onClick={() => setSelectedSubcategoryId(null)}
+                >
+                  Tümü
+                </Button>
+                {subcategories.map((subcategory) => (
+                  <Button
+                    key={subcategory.id}
+                    variant={selectedSubcategoryId === subcategory.id ? "default" : "outline"}
+                    size="sm"
+                    className="rounded-full"
+                    onClick={() => setSelectedSubcategoryId(subcategory.id)}
+                  >
+                    {subcategory.name}
+                  </Button>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Filtreleme - kategori zaten belirli olduğu için selectedCategory prop'u gönderiyoruz */}
           <ProductFilters
