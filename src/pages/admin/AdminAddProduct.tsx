@@ -12,6 +12,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { toast } from "@/hooks/use-toast";
 import { ArrowLeft } from "lucide-react";
 import { Helmet } from "react-helmet-async";
@@ -23,6 +33,10 @@ export default function AdminAddProduct() {
   const [loading, setLoading] = useState(false);
   const [categories, setCategories] = useState<any[]>([]);
   const [subcategories, setSubcategories] = useState<any[]>([]);
+  const [similarProductDialog, setSimilarProductDialog] = useState<{
+    open: boolean;
+    existingTitle: string | null;
+  }>({ open: false, existingTitle: null });
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -97,6 +111,48 @@ export default function AdminAddProduct() {
     }
   };
 
+  const normalizeTitle = (title: string): string => {
+    return title
+      .toLowerCase()
+      .trim()
+      .replace(/\s+/g, " "); // Replace multiple spaces with single space
+  };
+
+  const checkSimilarProducts = async (title: string): Promise<string | null> => {
+    const normalizedTitle = normalizeTitle(title);
+    if (!normalizedTitle || normalizedTitle.length < 2) {
+      return null;
+    }
+
+    // Search for products where title contains the normalized search term (case-insensitive)
+    // Using ILIKE with contains match: '%term%'
+    const { data, error } = await supabase
+      .from("products")
+      .select("title")
+      .ilike("title", `%${normalizedTitle}%`)
+      .limit(5);
+
+    if (error || !data || data.length === 0) {
+      return null;
+    }
+
+    // Check if any existing product's normalized title is similar
+    // (bidirectional check: new title contains existing OR existing contains new)
+    for (const product of data) {
+      const existingNormalized = normalizeTitle(product.title);
+      // Check if either title contains the other (bidirectional similarity)
+      if (
+        existingNormalized.includes(normalizedTitle) ||
+        normalizedTitle.includes(existingNormalized) ||
+        existingNormalized === normalizedTitle
+      ) {
+        return product.title;
+      }
+    }
+
+    return null;
+  };
+
   const generateSlug = (title: string) => {
     return title
       .toLowerCase()
@@ -111,13 +167,66 @@ export default function AdminAddProduct() {
       + "-" + Math.random().toString(36).substring(2, 7);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const performInsert = async () => {
     setLoading(true);
 
     try {
-      if (isEditMode) {
-        // Update product
+      // Insert product
+      const { data: product, error: productError } = await supabase
+        .from("products")
+        .insert({
+          title: formData.title,
+          description: formData.description,
+          image_url: formData.image_url,
+          image_url_2: formData.image_url_2,
+          category_id: formData.category_id || null,
+          subcategory_id: formData.subcategory_id || null,
+          tags: formData.tags
+            ? formData.tags.split(",").map((t) => t.trim()).filter(Boolean)
+            : [],
+          affiliate_url: formData.affiliate_url,
+        })
+        .select()
+        .single();
+
+      if (productError) throw productError;
+
+      // Insert redirect
+      const slug = generateSlug(formData.title);
+      const { error: redirectError } = await supabase.from("redirects").insert({
+        product_id: product.id,
+        slug: slug,
+        target_url: formData.affiliate_url,
+        click_count: 0,
+      });
+
+      if (redirectError) throw redirectError;
+
+      toast({
+        title: "Başarılı",
+        description: "Ürün eklendi.",
+      });
+
+      navigate("/admin/urunler");
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Hata",
+        description: "Ürün eklenemedi.",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (isEditMode) {
+      // Update product - no duplicate check needed
+      setLoading(true);
+
+      try {
         const { error: productError } = await supabase
           .from("products")
           .update({
@@ -148,53 +257,31 @@ export default function AdminAddProduct() {
           title: "Başarılı",
           description: "Ürün güncellendi.",
         });
-      } else {
-        // Insert product
-        const { data: product, error: productError } = await supabase
-          .from("products")
-          .insert({
-            title: formData.title,
-            description: formData.description,
-            image_url: formData.image_url,
-            image_url_2: formData.image_url_2,
-            category_id: formData.category_id || null,
-            subcategory_id: formData.subcategory_id || null,
-            tags: formData.tags
-              ? formData.tags.split(",").map((t) => t.trim()).filter(Boolean)
-              : [],
-            affiliate_url: formData.affiliate_url,
-          })
-          .select()
-          .single();
 
-        if (productError) throw productError;
-
-        // Insert redirect
-        const slug = generateSlug(formData.title);
-        const { error: redirectError } = await supabase.from("redirects").insert({
-          product_id: product.id,
-          slug: slug,
-          target_url: formData.affiliate_url,
-          click_count: 0,
-        });
-
-        if (redirectError) throw redirectError;
-
+        navigate("/admin/urunler");
+      } catch (error) {
         toast({
-          title: "Başarılı",
-          description: "Ürün eklendi.",
+          variant: "destructive",
+          title: "Hata",
+          description: "Ürün güncellenemedi.",
         });
+      } finally {
+        setLoading(false);
       }
+    } else {
+      // Insert mode: check for similar products first
+      const similarProductTitle = await checkSimilarProducts(formData.title);
 
-      navigate("/admin/urunler");
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Hata",
-        description: isEditMode ? "Ürün güncellenemedi." : "Ürün eklenemedi.",
-      });
-    } finally {
-      setLoading(false);
+      if (similarProductTitle) {
+        // Show confirmation dialog
+        setSimilarProductDialog({
+          open: true,
+          existingTitle: similarProductTitle,
+        });
+      } else {
+        // No similar products found, proceed directly
+        performInsert();
+      }
     }
   };
 
@@ -335,6 +422,35 @@ export default function AdminAddProduct() {
           {loading ? (isEditMode ? "Güncelleniyor..." : "Ekleniyor...") : (isEditMode ? "Ürünü Güncelle" : "Ürün Ekle")}
         </Button>
       </form>
+
+      {/* Similar Product Confirmation Dialog */}
+      <AlertDialog open={similarProductDialog.open} onOpenChange={(open) => {
+        if (!open) {
+          setSimilarProductDialog({ open: false, existingTitle: null });
+        }
+      }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Benzer Ürün Uyarısı</AlertDialogTitle>
+            <AlertDialogDescription>
+              Benzer bir ürün var: <strong>{similarProductDialog.existingTitle}</strong> | Devam etmek ister misiniz?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setSimilarProductDialog({ open: false, existingTitle: null })}>
+              Vazgeç
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                setSimilarProductDialog({ open: false, existingTitle: null });
+                performInsert();
+              }}
+            >
+              Evet, devam et
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
     </>
   );
