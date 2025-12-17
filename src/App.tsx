@@ -29,6 +29,9 @@ import AdminSubcategories from "./pages/admin/AdminSubcategories";
 import AdminMessages from "./pages/admin/AdminMessages";
 import Contact from "./pages/Contact";
 import CerezPolitikasi from "./pages/CerezPolitikasi";
+import AffiliateBildirimi from "./pages/AffiliateBildirimi";
+import GizlilikPolitikasi from "./pages/GizlilikPolitikasi";
+import Hakkinda from "./pages/Hakkinda";
 import NotFound from "./pages/NotFound";
 import { CookieConsent } from "@/components/CookieConsent";
 
@@ -75,6 +78,9 @@ const App = () => (
                     <Route path="/blog/:slug" element={<BlogPost />} />
                     <Route path="/iletisim" element={<Contact />} />
                     <Route path="/cerez-politikasi" element={<CerezPolitikasi />} />
+                    <Route path="/affiliate-bildirimi" element={<AffiliateBildirimi />} />
+                    <Route path="/gizlilik-politikasi" element={<GizlilikPolitikasi />} />
+                    <Route path="/hakkinda" element={<Hakkinda />} />
                     <Route path="/go/:slug" element={<Redirect />} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>

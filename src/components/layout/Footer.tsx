@@ -56,8 +56,13 @@ export const Footer = () => {
                 </Link>
               </li>
               <li>
-                <Link to="/affiliate-disclosure" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                <Link to="/affiliate-bildirimi" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
                   Affiliate Bildirimi
+                </Link>
+              </li>
+              <li>
+                <Link to="/gizlilik-politikasi" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                  Gizlilik Politikası
                 </Link>
               </li>
               <li>
