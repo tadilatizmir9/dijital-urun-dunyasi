@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
-import { trackPageView } from "@/lib/analytics";
+import { trackPageView } from "@/lib/ga";
 
 export default function ScrollToTop() {
   const { pathname, search } = useLocation();
