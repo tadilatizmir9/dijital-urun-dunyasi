@@ -130,7 +130,7 @@ export default function Home() {
               <h2 className="text-4xl sm:text-5xl font-black text-foreground tracking-tight">Popüler Kategoriler</h2>
               <p className="text-xl text-muted-foreground">Aradığın her şey burada</p>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 items-stretch">
               {categories.map((category) => (
                 <CategoryCard
                   key={category.id}
@@ -152,7 +152,7 @@ export default function Home() {
                 <h2 className="text-4xl sm:text-5xl font-extrabold text-foreground">Öne Çıkan Ürünler</h2>
                 <p className="text-lg text-muted-foreground">En çok tercih edilen dijital içerikler</p>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 items-stretch">
                 {featuredProducts.map((product) => (
                   <ProductCard
                     key={product.id}
@@ -175,7 +175,7 @@ export default function Home() {
           <section className="py-16 sm:py-20">
             <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
               <h2 className="text-3xl font-bold text-foreground mb-8">Yeni Eklenenler</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch">
                 {newProducts.map((product) => (
                   <ProductCard
                     key={product.id}
@@ -198,7 +198,7 @@ export default function Home() {
           <section className="py-16 sm:py-20 bg-card">
             <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
               <h2 className="text-3xl font-bold text-foreground mb-8">Blog'dan Son Yazılar</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch">
                 {blogPosts.map((post) => (
                   <BlogCard
                     key={post.id}

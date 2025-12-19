@@ -34,6 +34,7 @@ import GizlilikPolitikasi from "./pages/GizlilikPolitikasi";
 import Hakkinda from "./pages/Hakkinda";
 import NotFound from "./pages/NotFound";
 import { CookieConsent } from "@/components/CookieConsent";
+import ScrollToTop from "@/components/ScrollToTop";
 
 const queryClient = new QueryClient();
 
@@ -44,6 +45,7 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
+          <ScrollToTop />
           <Routes>
             {/* Admin Routes (no Header/Footer) */}
             <Route path="/admin/login" element={<AdminLogin />} />

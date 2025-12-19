@@ -10,6 +10,7 @@ import {
   FolderOpen,
   LogOut,
   MessageSquare,
+  ExternalLink,
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
@@ -143,6 +144,22 @@ export default function AdminLayout() {
 
       {/* Main Content */}
       <main className="flex-1 overflow-auto">
+        {/* Header */}
+        <div className="border-b border-border bg-card">
+          <div className="container mx-auto max-w-7xl px-8 py-4">
+            <div className="flex items-center justify-end">
+              <a
+                href="https://www.dijitalstok.com/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 rounded-md border px-3 py-2 text-sm font-medium hover:bg-muted transition"
+              >
+                Siteyi Gör
+                <ExternalLink className="h-4 w-4" />
+              </a>
+            </div>
+          </div>
+        </div>
         <div className="container mx-auto max-w-7xl p-8">
           <Outlet />
         </div>

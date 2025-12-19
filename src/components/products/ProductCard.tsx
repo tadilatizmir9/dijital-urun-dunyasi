@@ -35,12 +35,12 @@ export const ProductCard = ({
   const productPath = `/urun/${slug && slug.trim() ? slug : id}`;
 
   return (
-    <div className="group block relative">
+    <div className="group block relative h-full">
       <Link 
         to={productPath}
-        className="block"
+        className="block h-full"
       >
-        <div className="relative overflow-hidden rounded-2xl bg-card border border-border transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:border-purple/50">
+        <div className="relative h-full flex flex-col overflow-hidden rounded-2xl bg-card border border-border transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:border-purple/50 min-h-[360px]">
           {/* Favorite Button */}
           <button
             onClick={handleFavoriteClick}
@@ -57,13 +57,13 @@ export const ProductCard = ({
           </button>
 
           {/* Image */}
-          <div className="overflow-hidden bg-muted relative">
+          <div className="aspect-[4/3] overflow-hidden bg-muted relative">
           {image_url ? (
             <img
               src={image_url}
               alt={title}
               loading="lazy"
-              className="w-full object-contain transition-all duration-500 group-hover:scale-105 group-hover:opacity-90"
+              className="w-full h-full object-cover transition-all duration-500 group-hover:scale-105 group-hover:opacity-90"
             />
           ) : (
             <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-purple/5 to-secondary/5">
@@ -74,40 +74,47 @@ export const ProductCard = ({
         </div>
 
         {/* Content */}
-        <div className="p-5 space-y-3">
-          {/* Category */}
-          {category && (
-            <p className="text-xs font-semibold text-purple uppercase tracking-wider">{category}</p>
-          )}
+        <div className="flex-1 flex flex-col p-5">
+          <div className="space-y-3">
+            {/* Category */}
+            {category && (
+              <p className="text-xs font-semibold text-purple uppercase tracking-wider">{category}</p>
+            )}
 
-          {/* Title - 1 satır */}
-          <h3 className="font-semibold text-[17px] text-foreground line-clamp-1 group-hover:text-purple transition-colors duration-200 leading-tight">
-            {title}
-          </h3>
+            {/* Title - max 2 satır */}
+            <h3 className="font-semibold text-[17px] text-foreground line-clamp-2 group-hover:text-purple transition-colors duration-200 leading-tight">
+              {title}
+            </h3>
 
-          {/* Description - 2 satır */}
-          {description && (
-            <p className="text-[14px] text-muted-foreground line-clamp-2 leading-relaxed">
-              {description}
-            </p>
-          )}
+            {/* Description - max 2 satır */}
+            {description && (
+              <p className="text-[14px] text-muted-foreground line-clamp-2 leading-relaxed">
+                {description}
+              </p>
+            )}
 
-          {/* Tags - pill stil */}
-          {tags && tags.length > 0 && (
-            <div className="flex flex-wrap gap-2 pt-1">
-              {tags.slice(0, 3).map((tag, index) => (
-                <span 
-                  key={index}
-                  className="px-3 py-1 rounded-full bg-muted text-xs text-muted-foreground font-medium"
-                >
-                  {tag}
-                </span>
-              ))}
-            </div>
-          )}
+            {/* Tags - tek satır, overflow */}
+            {tags && tags.length > 0 && (
+              <div className="flex items-center gap-2 overflow-hidden whitespace-nowrap pt-1">
+                {tags.slice(0, 3).map((tag, index) => (
+                  <span 
+                    key={index}
+                    className="shrink-0 px-3 py-1 rounded-full bg-muted text-xs text-muted-foreground font-medium"
+                  >
+                    {tag}
+                  </span>
+                ))}
+                {tags.length > 3 && (
+                  <span className="shrink-0 px-3 py-1 rounded-full bg-muted text-xs text-muted-foreground font-medium">
+                    +{tags.length - 3}
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
 
-          {/* Button */}
-          <div className="pt-2">
+          {/* Button - mt-auto ile alta sabit */}
+          <div className="mt-auto pt-4">
             <Button 
               className="w-full rounded-full font-semibold bg-purple hover:bg-purple/90 text-purple-foreground transition-all duration-300 group/btn" 
               size="sm"
