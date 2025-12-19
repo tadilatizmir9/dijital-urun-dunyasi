@@ -116,7 +116,7 @@ export const ProductCard = ({
           {/* Button - mt-auto ile alta sabit */}
           <div className="mt-auto pt-4">
             <Button 
-              className="w-full rounded-full font-semibold bg-purple hover:bg-purple/90 text-purple-foreground transition-all duration-300 group/btn" 
+              className="w-full rounded-full font-semibold bg-primary hover:bg-primary/90 text-primary-foreground transition-all duration-300 group/btn" 
               size="sm"
             >
               İncele
