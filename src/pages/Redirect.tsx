@@ -3,6 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
+import { isTestModeOn } from "@/lib/testMode";
 
 export default function Redirect() {
   const { slug } = useParams();
@@ -16,6 +17,9 @@ export default function Redirect() {
 
   const handleRedirect = async () => {
     try {
+      // Check test mode using shared utility
+      const testModeActive = isTestModeOn();
+
       const res = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/track-click`,
         {
@@ -24,6 +28,7 @@ export default function Redirect() {
             "Content-Type": "application/json",
             "apikey": import.meta.env.VITE_SUPABASE_ANON_KEY,
             "Authorization": `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+            "x-admin-click": testModeActive ? "true" : "false",
           },
           body: JSON.stringify({ slug }),
         }

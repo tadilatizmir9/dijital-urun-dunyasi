@@ -11,13 +11,18 @@ import {
   LogOut,
   MessageSquare,
   ExternalLink,
+  BarChart3,
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge";
+import { isTestModeOn, setTestMode as setTestModeUtil } from "@/lib/testMode";
 
 export default function AdminLayout() {
   const navigate = useNavigate();
   const location = useLocation();
   const [loading, setLoading] = useState(true);
+  const [testMode, setTestMode] = useState(() => isTestModeOn());
 
   useEffect(() => {
     checkAuth();
@@ -61,6 +66,17 @@ export default function AdminLayout() {
     navigate("/");
   };
 
+  const handleTestModeToggle = (checked: boolean) => {
+    setTestModeUtil(checked);
+    setTestMode(checked);
+    toast({
+      title: checked ? "Test Modu Açık" : "Test Modu Kapalı",
+      description: checked
+        ? "Tıklamalarınız analytics'e dahil edilmeyecek."
+        : "Tıklamalarınız analytics'e dahil edilecek.",
+    });
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -94,6 +110,11 @@ export default function AdminLayout() {
       title: "Mesajlar",
       href: "/admin/mesajlar",
       icon: MessageSquare,
+    },
+    {
+      title: "Analiz",
+      href: "/admin/analytics",
+      icon: BarChart3,
     },
   ];
 
@@ -147,7 +168,26 @@ export default function AdminLayout() {
         {/* Header */}
         <div className="border-b border-border bg-card">
           <div className="container mx-auto max-w-7xl px-8 py-4">
-            <div className="flex items-center justify-end">
+            <div className="flex items-center justify-end gap-4">
+              {/* Test Mode Toggle */}
+              <div className="flex items-center gap-2">
+                <Switch
+                  checked={testMode}
+                  onCheckedChange={handleTestModeToggle}
+                  id="test-mode"
+                />
+                <label
+                  htmlFor="test-mode"
+                  className="text-sm font-medium cursor-pointer"
+                >
+                  Test Modu: {testMode ? "Açık" : "Kapalı"}
+                </label>
+                {testMode && (
+                  <Badge variant="secondary" className="text-xs">
+                    Açık
+                  </Badge>
+                )}
+              </div>
               <a
                 href="https://www.dijitalstok.com/"
                 target="_blank"

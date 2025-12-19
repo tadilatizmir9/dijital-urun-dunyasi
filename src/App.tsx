@@ -27,6 +27,7 @@ import AdminEditBlog from "./pages/admin/AdminEditBlog";
 import AdminCategories from "./pages/admin/AdminCategories";
 import AdminSubcategories from "./pages/admin/AdminSubcategories";
 import AdminMessages from "./pages/admin/AdminMessages";
+import AdminAnalytics from "./pages/admin/AdminAnalytics";
 import Contact from "./pages/Contact";
 import CerezPolitikasi from "./pages/CerezPolitikasi";
 import AffiliateBildirimi from "./pages/AffiliateBildirimi";
@@ -60,6 +61,7 @@ const App = () => (
               <Route path="kategoriler" element={<AdminCategories />} />
               <Route path="kategoriler/:categoryId/alt-kategoriler" element={<AdminSubcategories />} />
               <Route path="mesajlar" element={<AdminMessages />} />
+              <Route path="analytics" element={<AdminAnalytics />} />
             </Route>
 
             {/* Public Routes (with Header/Footer) */}

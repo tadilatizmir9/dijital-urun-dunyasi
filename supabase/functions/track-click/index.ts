@@ -4,7 +4,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+    "authorization, x-client-info, apikey, content-type, x-admin-click",
 };
 
 serve(async (req) => {
@@ -23,6 +23,9 @@ serve(async (req) => {
       });
     }
 
+    // Check if this is a test click (from header)
+    const isAdminClick = req.headers.get("x-admin-click") === "true";
+
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
@@ -30,7 +33,7 @@ serve(async (req) => {
 
     const { data, error } = await supabase
       .from("redirects")
-      .select("id, target_url, click_count")
+      .select("id, target_url, click_count, product_id")
       .eq("slug", slug)
       .single();
 
@@ -41,10 +44,30 @@ serve(async (req) => {
       });
     }
 
-    await supabase
-      .from("redirects")
-      .update({ click_count: (data.click_count || 0) + 1 })
-      .eq("id", data.id);
+    // Click count'u güncelle (sadece test click değilse)
+    if (!isAdminClick) {
+      await supabase
+        .from("redirects")
+        .update({ click_count: (data.click_count || 0) + 1 })
+        .eq("id", data.id);
+    }
+
+    // Click event ekle (sadece test click değilse)
+    if (!isAdminClick) {
+      try {
+        await supabase
+          .from("redirect_click_events")
+          .insert({
+            redirect_id: data.id,
+            product_id: data.product_id || null,
+          });
+      } catch (eventError) {
+        // Event insert başarısız olsa da devam et
+        console.error("Failed to insert click event:", eventError);
+      }
+    } else {
+      console.log("Test click ignored");
+    }
 
     return new Response(JSON.stringify({ target_url: data.target_url }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
