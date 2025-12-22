@@ -32,7 +32,12 @@ cd <YOUR_PROJECT_NAME>
 # Step 3: Install the necessary dependencies.
 npm i
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# Step 4: (Optional) Create a .env.local file for local environment variables.
+# Example .env.local:
+# VITE_GA_MEASUREMENT_ID=G-XXXXXXX
+# Note: If VITE_GA_MEASUREMENT_ID is not set, Google Analytics will not load (no errors).
+
+# Step 5: Start the development server with auto-reloading and an instant preview.
 npm run dev
 ```
 
