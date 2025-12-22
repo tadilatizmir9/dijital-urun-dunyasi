@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { CardMedia } from "@/components/ui/card-media";
 import { ArrowRight, Heart } from "lucide-react";
 import { useFavorites } from "@/hooks/useFavorites";
 
@@ -41,37 +42,29 @@ export const ProductCard = ({
         className="block h-full"
       >
         <div className="relative h-full flex flex-col overflow-hidden rounded-2xl bg-card border border-border transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:border-purple/50 min-h-[360px]">
-          {/* Favorite Button */}
-          <button
-            onClick={handleFavoriteClick}
-            className="absolute top-3 right-3 z-10 bg-white/80 backdrop-blur-sm rounded-full p-2 shadow hover:bg-white hover:scale-110 transition-all duration-200 group/fav"
-            aria-label={favorite ? "Favorilerden çıkar" : "Favorilere ekle"}
+          {/* Image with CardMedia */}
+          <CardMedia
+            src={image_url}
+            alt={title}
+            heightClass="h-[180px] md:h-[220px]"
+            roundedClass="rounded-t-2xl"
+            fallbackText="📦"
           >
-            <Heart 
-              className={`h-5 w-5 transition-all duration-200 ${
-                favorite 
-                  ? 'text-red-500 fill-red-500' 
-                  : 'text-muted-foreground group-hover/fav:text-red-500'
-              }`}
-            />
-          </button>
-
-          {/* Image */}
-          <div className="aspect-[4/3] overflow-hidden bg-muted relative">
-          {image_url ? (
-            <img
-              src={image_url}
-              alt={title}
-              loading="lazy"
-              className="w-full h-full object-cover transition-all duration-500 group-hover:scale-105 group-hover:opacity-90"
-            />
-          ) : (
-            <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-purple/5 to-secondary/5">
-              <span className="text-5xl animate-float">📦</span>
-            </div>
-          )}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-        </div>
+            {/* Favorite Button Overlay */}
+            <button
+              onClick={handleFavoriteClick}
+              className="absolute top-3 right-3 pointer-events-auto bg-white/80 backdrop-blur-sm rounded-full p-2 shadow hover:bg-white hover:scale-110 transition-all duration-200 group/fav"
+              aria-label={favorite ? "Favorilerden çıkar" : "Favorilere ekle"}
+            >
+              <Heart 
+                className={`h-5 w-5 transition-all duration-200 ${
+                  favorite 
+                    ? 'text-red-500 fill-red-500' 
+                    : 'text-muted-foreground group-hover/fav:text-red-500'
+                }`}
+              />
+            </button>
+          </CardMedia>
 
         {/* Content */}
         <div className="flex-1 flex flex-col p-5">

@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { CardMedia } from "@/components/ui/card-media";
 
 interface BlogCardProps {
   slug: string;
@@ -23,30 +24,24 @@ export const BlogCard = ({
 }: BlogCardProps) => {
   return (
     <div className="group h-full flex flex-col overflow-hidden rounded-3xl bg-card border border-border transition-all duration-300 hover:shadow-xl hover:shadow-primary/10 hover:border-primary/50 hover:-translate-y-1 min-h-[360px]">
-      {/* Image */}
-      <Link to={`/blog/${slug}`} className="block aspect-[4/3] overflow-hidden bg-muted relative">
-        {cover_image ? (
-          <img
-            src={cover_image}
-            alt={title}
-            loading="lazy"
-            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
-          />
-        ) : (
-          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary/5 to-secondary/5">
-            <span className="text-5xl animate-float">📝</span>
-          </div>
-        )}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-        
-        {/* Category Badge */}
-        {category && (
-          <div className="absolute top-3 left-3">
-            <Badge className="bg-primary text-primary-foreground">
-              {category}
-            </Badge>
-          </div>
-        )}
+      {/* Image with CardMedia */}
+      <Link to={`/blog/${slug}`} className="block">
+        <CardMedia
+          src={cover_image}
+          alt={title}
+          heightClass="h-[180px] md:h-[220px]"
+          roundedClass="rounded-t-3xl"
+          fallbackText="📝"
+        >
+          {/* Category Badge Overlay */}
+          {category && (
+            <div className="absolute top-3 left-3 pointer-events-auto">
+              <Badge className="bg-primary text-primary-foreground">
+                {category}
+              </Badge>
+            </div>
+          )}
+        </CardMedia>
       </Link>
 
       {/* Content */}

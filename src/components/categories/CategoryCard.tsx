@@ -43,20 +43,20 @@ export const CategoryCard = ({
   
   return (
     <Link to={`/kategori/${slug}`} className="block h-full">
-      <div className="group h-full flex flex-col relative overflow-hidden rounded-2xl bg-card border-2 border-border p-6 transition-all duration-300 hover:border-primary hover:shadow-xl hover:shadow-primary/5 hover:-translate-y-1 min-h-[170px]">
-        {/* Icon */}
-        <div className="relative mb-4 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-300">
+      <div className="group h-full flex flex-col relative overflow-hidden rounded-2xl bg-card border-2 border-border p-6 transition-all duration-300 hover:border-primary hover:shadow-xl hover:shadow-primary/5 hover:-translate-y-1">
+        {/* Icon - Fixed size area */}
+        <div className="relative mb-4 inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-300">
           <IconComponent className="h-6 w-6" strokeWidth={2.5} />
         </div>
 
         {/* Name - max 1 satır */}
-        <h3 className="relative font-black text-lg text-foreground mb-2 group-hover:text-primary transition-colors duration-200 line-clamp-1">
+        <h3 className="relative font-black text-lg text-foreground mb-2 group-hover:text-primary transition-colors duration-200 line-clamp-1 leading-tight">
           {name}
         </h3>
 
-        {/* Description - max 2 satır */}
+        {/* Description - max 3 satır (toplam ~5 satır: icon area + title + description) */}
         {description && (
-          <p className="relative text-sm text-muted-foreground line-clamp-2">
+          <p className="relative text-sm text-muted-foreground line-clamp-3 leading-relaxed">
             {description}
           </p>
         )}
