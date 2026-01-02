@@ -1,23 +1,33 @@
 import { createClient } from '@supabase/supabase-js';
 
-const BASE_URL = 'https://dijitalstok.com';
+const BASE_URL = 'https://www.dijitalstok.com';
 
 // Supabase configuration
 // Note: For Vercel, set SUPABASE_SERVICE_ROLE_KEY in environment variables
-const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || 'https://wkqsvmvkobbybrrosvyv.supabase.co';
-const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+const SUPABASE_URL =
+  process.env.VITE_SUPABASE_URL ||
+  process.env.SUPABASE_URL ||
+  'https://wkqsvmvkobbybrrosvyv.supabase.co';
 
-// Create Supabase client with service role key (bypasses RLS)
-// If service role key is not available, this will fail gracefully
-const supabase = SUPABASE_SERVICE_ROLE_KEY
-  ? createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false,
-      },
-    })
-  : null;
+// Service role varsa onu kullan (RLS bypass). Yoksa anon/publishable ile devam et.
+const SUPABASE_KEY =
+  process.env.SUPABASE_SERVICE_ROLE_KEY ||
+  process.env.SUPABASE_SERVICE_ROLE_KEY || // (bazı projelerde böyle isimli olabiliyor)
+  process.env.VITE_SUPABASE_ANON_KEY ||
+  process.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
+  process.env.SUPABASE_ANON_KEY ||
+  '';
 
+if (!SUPABASE_KEY) {
+  throw new Error('No Supabase key found. Set VITE_SUPABASE_ANON_KEY (or SUPABASE_ANON_KEY).');
+}
+
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
+  auth: {
+    autoRefreshToken: false,
+    persistSession: false,
+  },
+});
 // Format date to ISO 8601
 function formatDate(date: string | null): string {
   if (!date) return new Date().toISOString();
@@ -55,12 +65,6 @@ function escapeXml(unsafe: string): string {
 
 export default async function handler(req: any, res: any) {
   try {
-    if (!supabase) {
-      res.status(500).json({ 
-        error: 'Supabase service role key not configured. Please set SUPABASE_SERVICE_ROLE_KEY environment variable.' 
-      });
-      return;
-    }
 
     const urls: Array<{ loc: string; lastmod: string; changefreq: string; priority: string }> = [];
 
