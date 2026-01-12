@@ -6,39 +6,30 @@ export function initGA(): void {
   if (typeof window === "undefined") return;
 
   const gaId = import.meta.env.VITE_GA_MEASUREMENT_ID;
-  console.log("[GA DEBUG] gaId:", gaId);
-  console.log("[GA DEBUG] hostname:", window.location.hostname);
 
-  // Skip if env variable is not set or empty
-  if (!gaId || gaId.trim() === "") {
-    return;
-  }
+  if (!gaId || gaId.trim() === "") return;
+  if (gaId.includes("VITE_GA_MEASUREMENT_ID") || gaId.includes("%")) return;
 
-  // Skip if placeholder value (shouldn't happen but safety check)
-  if (gaId.includes("VITE_GA_MEASUREMENT_ID") || gaId.includes("%")) {
-    return;
-  }
-
-  // Load GA script
-  const script = document.createElement("script");
-  script.async = true;
-  script.src = `https://www.googletagmanager.com/gtag/js?id=${gaId}`;
-  document.head.appendChild(script);
-
-  // Initialize dataLayer and gtag
+  // ✅ 1) Önce dataLayer + gtag kur
   window.dataLayer = window.dataLayer || [];
   function gtag(...args: any[]) {
     window.dataLayer!.push(args);
   }
   window.gtag = gtag;
 
+  // ✅ 2) Sonra gtag.js scriptini yükle
+  const scriptId = "ga-gtag-js";
+  if (!document.getElementById(scriptId)) {
+    const script = document.createElement("script");
+    script.id = scriptId;
+    script.async = true;
+    script.src = `https://www.googletagmanager.com/gtag/js?id=${gaId}`;
+    document.head.appendChild(script);
+  }
+
+  // ✅ 3) Konfigürasyon + ilk page_view
   gtag("js", new Date());
-  // SPA olduğu için otomatik page_view kapalı
-  gtag("config", gaId, { send_page_view: false });
-  // İlk yüklemede page_view'ı garanti gönder (SPA'da bazen ilk route tetiklenmeyebiliyor)
-gtag("event", "page_view", {
-  page_path: window.location.pathname + window.location.search,
-});
+  gtag("config", gaId, { send_page_view: true }); // şimdilik true yapıyoruz
 }
 
 /**
