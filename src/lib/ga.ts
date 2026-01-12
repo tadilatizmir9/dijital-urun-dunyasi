@@ -35,6 +35,10 @@ export function initGA(): void {
   gtag("js", new Date());
   // SPA olduğu için otomatik page_view kapalı
   gtag("config", gaId, { send_page_view: false });
+  // İlk yüklemede page_view'ı garanti gönder (SPA'da bazen ilk route tetiklenmeyebiliyor)
+gtag("event", "page_view", {
+  page_path: window.location.pathname + window.location.search,
+});
 }
 
 /**
