@@ -6,6 +6,8 @@ export function initGA(): void {
   if (typeof window === "undefined") return;
 
   const gaId = import.meta.env.VITE_GA_MEASUREMENT_ID;
+  console.log("[GA DEBUG] gaId:", gaId);
+  console.log("[GA DEBUG] hostname:", window.location.hostname);
 
   // Skip if env variable is not set or empty
   if (!gaId || gaId.trim() === "") {
