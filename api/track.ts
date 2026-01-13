@@ -95,6 +95,20 @@ export default async function handler(req: any, res: any) {
       return res.status(400).json({ error: 'session_id is required' });
     }
 
+    // Handle visitor_id: validate UUID v4 format, set to null if invalid or missing
+    let visitorId: string | null = null;
+    const rawVisitorId = sanitizeString(body.visitor_id, 100);
+    if (rawVisitorId) {
+      // Validate UUID v4 format
+      const uuidV4Regex = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+      if (uuidV4Regex.test(rawVisitorId)) {
+        visitorId = rawVisitorId;
+      } else {
+        // Invalid format, set to null (don't fail the request)
+        console.warn('[track] Invalid visitor_id format, setting to null:', rawVisitorId);
+      }
+    }
+
     // Get client IP
     const ip = getClientIp(req);
 
@@ -107,6 +121,7 @@ export default async function handler(req: any, res: any) {
         source,
         campaign,
         session_id: sessionId,
+        visitor_id: visitorId,
         user_agent: userAgent,
         ip,
       });

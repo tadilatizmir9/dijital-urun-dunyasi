@@ -14,6 +14,44 @@
 const SESSION_ID_KEY = 'visitor_analytics_session_id';
 const SESSION_DURATION = 30 * 60 * 1000; // 30 minutes
 const EXCLUDE_KEY = 'ds_analytics_exclude';
+const VISITOR_ID_KEY = 'visitor_analytics_visitor_id';
+const VISITOR_ID_CREATED_AT_KEY = 'visitor_analytics_visitor_id_created_at';
+const VISITOR_ID_DURATION = 365 * 24 * 60 * 60 * 1000; // 365 days
+
+/**
+ * Get or create a persistent visitor ID from localStorage (365 days)
+ */
+function getOrCreateVisitorId(): string {
+  if (typeof window === 'undefined') {
+    return '';
+  }
+
+  try {
+    const storedId = localStorage.getItem(VISITOR_ID_KEY);
+    const storedCreatedAt = localStorage.getItem(VISITOR_ID_CREATED_AT_KEY);
+    
+    if (storedId && storedCreatedAt) {
+      const createdAt = parseInt(storedCreatedAt, 10);
+      const now = Date.now();
+      
+      // Check if visitor ID is still valid (within 365 days)
+      if (!isNaN(createdAt) && now - createdAt < VISITOR_ID_DURATION) {
+        return storedId;
+      }
+    }
+
+    // Generate new visitor ID
+    const newVisitorId = generateUUID();
+    const timestamp = Date.now().toString();
+    localStorage.setItem(VISITOR_ID_KEY, newVisitorId);
+    localStorage.setItem(VISITOR_ID_CREATED_AT_KEY, timestamp);
+    return newVisitorId;
+  } catch (error) {
+    console.warn('[visitorAnalytics] Failed to access localStorage for visitor ID:', error);
+    // Fallback: generate a visitor ID that won't persist
+    return generateUUID();
+  }
+}
 
 /**
  * Get or create a session ID from localStorage
@@ -48,9 +86,20 @@ function getOrCreateSessionId(): string {
 }
 
 /**
- * Generate a simple UUID v4
+ * Generate a UUID v4
+ * Uses crypto.randomUUID() if available, otherwise falls back to manual generation
  */
 function generateUUID(): string {
+  // Use crypto.randomUUID() if available (modern browsers)
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    try {
+      return crypto.randomUUID();
+    } catch (error) {
+      // Fall through to fallback
+    }
+  }
+
+  // Fallback UUID v4 generator
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
     const r = (Math.random() * 16) | 0;
     const v = c === 'x' ? r : (r & 0x3) | 0x8;
@@ -148,6 +197,13 @@ export function trackPageView(path: string): void {
     return;
   }
 
+  // Get visitor ID (persistent for 365 days)
+  const visitorId = getOrCreateVisitorId();
+  if (!visitorId) {
+    console.warn('[visitorAnalytics] Failed to get visitor ID');
+    return;
+  }
+
   // Get session ID
   const sessionId = getOrCreateSessionId();
   if (!sessionId) {
@@ -181,6 +237,7 @@ export function trackPageView(path: string): void {
     source,
     campaign: utmCampaign || null,
     session_id: sessionId,
+    visitor_id: visitorId,
     user_agent: userAgent,
   };
 
