@@ -85,6 +85,7 @@ export default async function handler(req: any, res: any) {
     }
 
     // Sanitize inputs
+    const fullPath = sanitizeString(body.full_path, 500); // Optional full path with query/hash
     const referrer = sanitizeString(body.referrer);
     const source = sanitizeString(body.source, 100);
     const campaign = sanitizeString(body.campaign, 200);
@@ -117,7 +118,8 @@ export default async function handler(req: any, res: any) {
     const { error: insertError } = await supabase
       .from('page_views')
       .insert({
-        path,
+        path, // Clean path (pathname only)
+        full_path: fullPath, // Full path with query/hash (optional)
         referrer,
         source,
         campaign,

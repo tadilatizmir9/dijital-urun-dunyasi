@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/lib/supabaseClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -73,6 +73,7 @@ export default function AdminAnalytics() {
   const [visitorMode, setVisitorMode] = useState<'preset' | 'range'>('preset');
   const [visitorPreset, setVisitorPreset] = useState<'24h' | '7d' | '30d' | 'today' | 'yesterday' | 'custom'>('7d');
   const [visitorRange, setVisitorRange] = useState<{ from: Date | null; to: Date | null }>({ from: null, to: null });
+  const requestIdRef = useRef<number>(0);
   const [visitorStats, setVisitorStats] = useState<{
     totalViews: number;
     uniqueSessions: number;
@@ -83,7 +84,9 @@ export default function AdminAnalytics() {
     views: number;
     last_seen: string;
     title?: string | null;
+    full_path?: string | null;
   }>>([]);
+  const [pathLabels, setPathLabels] = useState<Record<string, string>>({});
   const [topSources, setTopSources] = useState<Array<{
     source: string;
     views: number;
@@ -582,248 +585,214 @@ export default function AdminAnalytics() {
   };
 
   const fetchVisitorAnalytics = async () => {
+    // Generate new request ID to prevent race conditions
+    const currentRequestId = Date.now();
+    requestIdRef.current = currentRequestId;
+
     try {
       let startTs: string;
       let endTs: string;
 
-      if (visitorMode === 'range') {
-        if (visitorPreset === 'today') {
-          const range = getTodayRange();
-          startTs = range.start;
-          endTs = range.end;
-        } else if (visitorPreset === 'yesterday') {
-          const range = getYesterdayRange();
-          startTs = range.start;
-          endTs = range.end;
-        } else if (visitorRange.from && visitorRange.to) {
-          const range = getCustomRange(visitorRange.from, visitorRange.to);
-          startTs = range.start;
-          endTs = range.end;
-        } else {
-          // Fallback to 7 days if range not set
-          const range = getPresetRange(7);
-          startTs = range.start;
-          endTs = range.end;
-        }
-
-        // Fetch stats using range RPC
-        const { data: statsData, error: statsError } = await supabase.rpc('get_pageview_stats_range', {
-          start_ts: startTs,
-          end_ts: endTs,
-        });
-
-        if (statsError) {
-          console.error('[AdminAnalytics] fetchVisitorAnalytics - stats error:', statsError);
-          // If table doesn't exist, set defaults and continue
-          if (statsError.code === '42P01' || statsError.message?.includes('relation')) {
-            setVisitorStats({ totalViews: 0, uniqueSessions: 0, uniqueVisitors: 0 });
-            setTopPages([]);
-            setTopSources([]);
-            return;
-          }
-          throw statsError;
-        }
-
-        // RPC bazen [{ total_views: ..., unique_sessions: ..., unique_visitors: ... }] döner, bazen { total: ..., sessions: ..., visitors: ... }
-        const row = Array.isArray(statsData) ? statsData[0] : statsData;
-
-        // Hem total_views/unique_sessions/unique_visitors hem de total/sessions/visitors alanlarını destekle
-        const totalViews = Number(
-          row?.total_views ?? row?.total ?? 0
-        );
-        const uniqueSessions = Number(
-          row?.unique_sessions ?? row?.sessions ?? 0
-        );
-        const uniqueVisitors = Number(
-          row?.unique_visitors ?? row?.uniqueVisitors ?? row?.visitors ?? 0
-        );
-
-        setVisitorStats({
-          totalViews,
-          uniqueSessions,
-          uniqueVisitors,
-        });
-
-        // Fetch top pages using range RPC
-        const { data: topPagesData, error: topPagesError } = await supabase.rpc('get_pageview_top_pages_range', {
-          start_ts: startTs,
-          end_ts: endTs,
-        });
-
-        if (topPagesError) {
-          console.error('[AdminAnalytics] fetchVisitorAnalytics - top pages error:', topPagesError);
-          setTopPages([]);
-        } else {
-          setTopPages(topPagesData || []);
-        }
-
-        // Fetch sources using range RPC
-        const { data: sourcesData, error: sourcesError } = await supabase.rpc('get_pageview_sources_range', {
-          start_ts: startTs,
-          end_ts: endTs,
-        });
-
-        if (sourcesError) {
-          console.error('[AdminAnalytics] fetchVisitorAnalytics - sources error:', sourcesError);
-          setTopSources([]);
-        } else {
-          setTopSources(sourcesData || []);
-        }
+      // Unify all date range calculations - ALL buttons use *_range RPC functions
+      if (visitorMode === 'preset') {
+        // 24h/7d/30d presets: convert to hours and use range RPC
+        const hours = visitorDateRange === 24 ? 24 : visitorDateRange === 7 ? 7 * 24 : 30 * 24;
+        const range = getPresetRange(hours);
+        startTs = range.start;
+        endTs = range.end;
+      } else if (visitorPreset === 'today') {
+        const range = getTodayRange();
+        startTs = range.start;
+        endTs = range.end;
+      } else if (visitorPreset === 'yesterday') {
+        const range = getYesterdayRange();
+        startTs = range.start;
+        endTs = range.end;
+      } else if (visitorRange.from && visitorRange.to) {
+        const range = getCustomRange(visitorRange.from, visitorRange.to);
+        startTs = range.start;
+        endTs = range.end;
       } else {
-        // Preset mode: use existing days-based RPCs
-        const days = visitorDateRange;
+        // Fallback to 7 days if range not set
+        const range = getPresetRange(7 * 24);
+        startTs = range.start;
+        endTs = range.end;
+      }
 
-        // Fetch stats
-        const { data: statsData, error: statsError } = await supabase.rpc('get_pageview_stats', {
-          days,
-        });
+      // Fetch stats using range RPC (unified for all modes)
+      const { data: statsData, error: statsError } = await supabase.rpc('get_pageview_stats_range', {
+        start_ts: startTs,
+        end_ts: endTs,
+      });
 
-        if (statsError) {
-          console.error('[AdminAnalytics] fetchVisitorAnalytics - stats error:', statsError);
-          // If table doesn't exist, set defaults and continue
-          if (statsError.code === '42P01' || statsError.message?.includes('relation')) {
-            setVisitorStats({ totalViews: 0, uniqueSessions: 0, uniqueVisitors: 0 });
-            setTopPages([]);
-            setTopSources([]);
-            return;
-          }
-          throw statsError;
-        }
+      // Check if this request is still current (prevent race conditions)
+      if (requestIdRef.current !== currentRequestId) {
+        console.log('[AdminAnalytics] Ignoring stale response for request', currentRequestId);
+        return;
+      }
 
-        // RPC bazen [{ total_views: ..., unique_sessions: ..., unique_visitors: ... }] döner, bazen { total: ..., sessions: ..., visitors: ... }
-        const row = Array.isArray(statsData) ? statsData[0] : statsData;
-
-        // Hem total_views/unique_sessions/unique_visitors hem de total/sessions/visitors alanlarını destekle
-        const totalViews = Number(
-          row?.total_views ?? row?.total ?? 0
-        );
-        const uniqueSessions = Number(
-          row?.unique_sessions ?? row?.sessions ?? 0
-        );
-        const uniqueVisitors = Number(
-          row?.unique_visitors ?? row?.uniqueVisitors ?? row?.visitors ?? 0
-        );
-
-        setVisitorStats({
-          totalViews,
-          uniqueSessions,
-          uniqueVisitors,
-        });
-
-        // Fetch top pages
-        const { data: topPagesData, error: topPagesError } = await supabase.rpc('get_pageview_top_pages', {
-          days,
-          page_limit: 10,
-        });
-
-        if (topPagesError) {
-          console.error('[AdminAnalytics] fetchVisitorAnalytics - top pages error:', topPagesError);
+      if (statsError) {
+        console.error('[AdminAnalytics] fetchVisitorAnalytics - stats error:', statsError);
+        // If table doesn't exist, set defaults and continue
+        if (statsError.code === '42P01' || statsError.message?.includes('relation')) {
+          setVisitorStats({ totalViews: 0, uniqueSessions: 0, uniqueVisitors: 0 });
           setTopPages([]);
-        } else {
-          setTopPages(topPagesData || []);
-        }
-
-        // Fetch sources
-        const { data: sourcesData, error: sourcesError } = await supabase.rpc('get_pageview_sources', {
-          days,
-        });
-
-        if (sourcesError) {
-          console.error('[AdminAnalytics] fetchVisitorAnalytics - sources error:', sourcesError);
           setTopSources([]);
-        } else {
-          setTopSources(sourcesData || []);
+          return;
         }
+        throw statsError;
+      }
+
+      // RPC bazen [{ total_views: ..., unique_sessions: ..., unique_visitors: ... }] döner, bazen { total: ..., sessions: ..., visitors: ... }
+      const row = Array.isArray(statsData) ? statsData[0] : statsData;
+
+      // Hem total_views/unique_sessions/unique_visitors hem de total/sessions/visitors alanlarını destekle
+      const totalViews = Number(
+        row?.total_views ?? row?.total ?? 0
+      );
+      const uniqueSessions = Number(
+        row?.unique_sessions ?? row?.sessions ?? 0
+      );
+      const uniqueVisitors = Number(
+        row?.unique_visitors ?? row?.uniqueVisitors ?? row?.visitors ?? 0
+      );
+
+      // Check again before setting state
+      if (requestIdRef.current !== currentRequestId) {
+        console.log('[AdminAnalytics] Ignoring stale stats update for request', currentRequestId);
+        return;
+      }
+
+      setVisitorStats({
+        totalViews,
+        uniqueSessions,
+        uniqueVisitors,
+      });
+
+      // Fetch top pages using range RPC
+      const { data: topPagesData, error: topPagesError } = await supabase.rpc('get_pageview_top_pages_range', {
+        start_ts: startTs,
+        end_ts: endTs,
+      });
+
+      // Check again before setting state
+      if (requestIdRef.current !== currentRequestId) {
+        console.log('[AdminAnalytics] Ignoring stale top pages update for request', currentRequestId);
+        return;
+      }
+
+      if (topPagesError) {
+        console.error('[AdminAnalytics] fetchVisitorAnalytics - top pages error:', topPagesError);
+        setTopPages([]);
+      } else {
+        setTopPages(topPagesData || []);
+      }
+
+      // Fetch sources using range RPC
+      const { data: sourcesData, error: sourcesError } = await supabase.rpc('get_pageview_sources_range', {
+        start_ts: startTs,
+        end_ts: endTs,
+      });
+
+      // Check again before setting state
+      if (requestIdRef.current !== currentRequestId) {
+        console.log('[AdminAnalytics] Ignoring stale sources update for request', currentRequestId);
+        return;
+      }
+
+      if (sourcesError) {
+        console.error('[AdminAnalytics] fetchVisitorAnalytics - sources error:', sourcesError);
+        setTopSources([]);
+      } else {
+        setTopSources(sourcesData || []);
       }
     } catch (e) {
       console.error('[AdminAnalytics] fetchVisitorAnalytics error:', e);
       // Don't throw - visitor analytics is optional
-      setVisitorStats({ totalViews: 0, uniqueSessions: 0, uniqueVisitors: 0 });
-      setTopPages([]);
-      setTopSources([]);
+      // Only update state if this is still the current request
+      if (requestIdRef.current === currentRequestId) {
+        setVisitorStats({ totalViews: 0, uniqueSessions: 0, uniqueVisitors: 0 });
+        setTopPages([]);
+        setTopSources([]);
+      }
     }
   };
 
   const fetchVisitorTrends = async () => {
+    // Generate new request ID to prevent race conditions
+    const currentRequestId = Date.now();
+
     try {
       let startTs: string;
       let endTs: string;
 
-      if (visitorMode === 'range') {
-        if (visitorPreset === 'today') {
-          const range = getTodayRange();
-          startTs = range.start;
-          endTs = range.end;
-        } else if (visitorPreset === 'yesterday') {
-          const range = getYesterdayRange();
-          startTs = range.start;
-          endTs = range.end;
-        } else if (visitorRange.from && visitorRange.to) {
-          const range = getCustomRange(visitorRange.from, visitorRange.to);
-          startTs = range.start;
-          endTs = range.end;
-        } else {
-          // Fallback to 7 days if range not set
-          const range = getPresetRange(7);
-          startTs = range.start;
-          endTs = range.end;
-        }
-
-        const { data: trendsData, error: trendsError } = await supabase.rpc('get_pageview_daily_range', {
-          start_ts: startTs,
-          end_ts: endTs,
-        });
-
-        if (trendsError) {
-          console.error('[AdminAnalytics] fetchVisitorTrends - RPC error:', trendsError);
-          if (trendsError.code === '42P01' || trendsError.message?.includes('relation') || trendsError.message?.includes('function')) {
-            setDailyTrend([]);
-            return;
-          }
-          throw trendsError;
-        }
-
-        const dataArray = Array.isArray(trendsData) ? trendsData : (trendsData ? [trendsData] : []);
-        const formattedData = dataArray.map((item: any) => ({
-          day: item.day || item.date || new Date().toISOString().split('T')[0],
-          views: Number(item.views ?? item.total_views ?? 0),
-          sessions: Number(item.sessions ?? item.unique_sessions ?? 0),
-          visitors: Number(item.visitors ?? item.unique_visitors ?? 0),
-        }));
-        setDailyTrend(formattedData);
+      // Unify all date range calculations - ALL buttons use *_range RPC functions
+      if (visitorMode === 'preset') {
+        // 24h/7d/30d presets: convert to hours and use range RPC
+        const hours = visitorTrendDays === 7 ? 7 * 24 : 30 * 24;
+        const range = getPresetRange(hours);
+        startTs = range.start;
+        endTs = range.end;
+      } else if (visitorPreset === 'today') {
+        const range = getTodayRange();
+        startTs = range.start;
+        endTs = range.end;
+      } else if (visitorPreset === 'yesterday') {
+        const range = getYesterdayRange();
+        startTs = range.start;
+        endTs = range.end;
+      } else if (visitorRange.from && visitorRange.to) {
+        const range = getCustomRange(visitorRange.from, visitorRange.to);
+        startTs = range.start;
+        endTs = range.end;
       } else {
-        // Preset mode: use existing days-based RPC
-        const days = visitorTrendDays;
-
-        const { data: trendsData, error: trendsError } = await supabase.rpc('get_pageview_daily', {
-          days,
-        });
-
-        if (trendsError) {
-          console.error('[AdminAnalytics] fetchVisitorTrends - RPC error:', trendsError);
-          if (trendsError.code === '42P01' || trendsError.message?.includes('relation') || trendsError.message?.includes('function')) {
-            setDailyTrend([]);
-            return;
-          }
-          throw trendsError;
-        }
-
-        // Handle array/object safely
-        const dataArray = Array.isArray(trendsData) ? trendsData : (trendsData ? [trendsData] : []);
-
-        // Format data for chart
-        const formattedData = dataArray.map((item: any) => ({
-          day: item.day || item.date || new Date().toISOString().split('T')[0],
-          views: Number(item.views ?? item.total_views ?? 0),
-          sessions: Number(item.sessions ?? item.unique_sessions ?? 0),
-          visitors: Number(item.visitors ?? item.unique_visitors ?? 0),
-        }));
-
-        setDailyTrend(formattedData);
+        // Fallback to 7 days if range not set
+        const range = getPresetRange(7 * 24);
+        startTs = range.start;
+        endTs = range.end;
       }
+
+      const { data: trendsData, error: trendsError } = await supabase.rpc('get_pageview_daily_range', {
+        start_ts: startTs,
+        end_ts: endTs,
+      });
+
+      // Check if this request is still current (prevent race conditions)
+      if (requestIdRef.current !== currentRequestId) {
+        console.log('[AdminAnalytics] Ignoring stale trends response for request', currentRequestId);
+        return;
+      }
+
+      if (trendsError) {
+        console.error('[AdminAnalytics] fetchVisitorTrends - RPC error:', trendsError);
+        if (trendsError.code === '42P01' || trendsError.message?.includes('relation') || trendsError.message?.includes('function')) {
+          setDailyTrend([]);
+          return;
+        }
+        throw trendsError;
+      }
+
+      const dataArray = Array.isArray(trendsData) ? trendsData : (trendsData ? [trendsData] : []);
+      const formattedData = dataArray.map((item: any) => ({
+        day: item.day || item.date || new Date().toISOString().split('T')[0],
+        views: Number(item.views ?? item.total_views ?? 0),
+        sessions: Number(item.sessions ?? item.unique_sessions ?? 0),
+        visitors: Number(item.visitors ?? item.unique_visitors ?? 0),
+      }));
+
+      // Check again before setting state
+      if (requestIdRef.current !== currentRequestId) {
+        console.log('[AdminAnalytics] Ignoring stale trends update for request', currentRequestId);
+        return;
+      }
+
+      setDailyTrend(formattedData);
     } catch (e) {
       console.error('[AdminAnalytics] fetchVisitorTrends error:', e);
-      setDailyTrend([]);
+      // Only update state if this is still the current request
+      if (requestIdRef.current === currentRequestId) {
+        setDailyTrend([]);
+      }
     }
   };
 
@@ -877,6 +846,87 @@ export default function AdminAnalytics() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loading]);
 
+  // Fetch friendly labels for paths (products, categories)
+  const fetchPathLabels = async (paths: string[]) => {
+    const labels: Record<string, string> = {};
+    
+    // Extract product slugs and category slugs from paths
+    const productSlugs: string[] = [];
+    const categorySlugs: string[] = [];
+    
+    paths.forEach((path) => {
+      // Match /urun/{slug}
+      const productMatch = path.match(/^\/urun\/([^\/]+)$/);
+      if (productMatch) {
+        productSlugs.push(productMatch[1]);
+      }
+      
+      // Match /kategori/{slug}
+      const categoryMatch = path.match(/^\/kategori\/([^\/]+)$/);
+      if (categoryMatch) {
+        categorySlugs.push(categoryMatch[1]);
+      }
+    });
+    
+    // Fetch products by slugs
+    if (productSlugs.length > 0) {
+      try {
+        const { data: products } = await supabase
+          .from('products')
+          .select('slug, title')
+          .in('slug', productSlugs);
+        
+        if (products) {
+          products.forEach((product: any) => {
+            labels[`/urun/${product.slug}`] = product.title || product.slug;
+          });
+        }
+      } catch (error) {
+        console.error('[AdminAnalytics] Error fetching product labels:', error);
+      }
+    }
+    
+    // Fetch categories by slugs
+    if (categorySlugs.length > 0) {
+      try {
+        const { data: categories } = await supabase
+          .from('categories')
+          .select('slug, name')
+          .in('slug', categorySlugs);
+        
+        if (categories) {
+          categories.forEach((category: any) => {
+            labels[`/kategori/${category.slug}`] = category.name || category.slug;
+          });
+        }
+      } catch (error) {
+        console.error('[AdminAnalytics] Error fetching category labels:', error);
+      }
+    }
+    
+    // Add static labels
+    labels['/'] = 'Ana Sayfa';
+    labels['/urunler'] = 'Ürünler';
+    labels['/blog'] = 'Blog';
+    labels['/hakkimizda'] = 'Hakkımızda';
+    labels['/iletisim'] = 'İletişim';
+    labels['/favoriler'] = 'Favoriler';
+    labels['/arama'] = 'Arama';
+    
+    setPathLabels(labels);
+  };
+
+  // Get friendly label for a path
+  const getPathLabel = (path: string): string => {
+    // Check if we have a label for this path
+    if (pathLabels[path]) {
+      return pathLabels[path];
+    }
+    
+    // Fallback to path itself
+    return path;
+  };
+
   useEffect(() => {
     // Only fetch visitor analytics after initial load is complete
     if (!loading) {
@@ -884,6 +934,15 @@ export default function AdminAnalytics() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visitorDateRange, visitorMode, visitorPreset, visitorRange]);
+
+  // Fetch path labels when topPages changes
+  useEffect(() => {
+    if (topPages.length > 0) {
+      const paths = topPages.map((p) => p.path);
+      fetchPathLabels(paths);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [topPages]);
 
   const handleCheckRedirect = async (redirectId: string) => {
     try {
@@ -1329,24 +1388,23 @@ export default function AdminAnalytics() {
                           </TableRow>
                         ) : (
                           topPages.map((page, index) => {
-                            // Remove query string from path for display
-                            const pathWithoutQuery = page.path.split('?')[0];
-                            // Full path with query string for tooltip
-                            const fullPath = page.path;
+                            // Get friendly label for the path
+                            const friendlyLabel = getPathLabel(page.path);
+                            // Use full_path if available, otherwise use path
+                            const fullPathForTooltip = page.full_path || page.path;
                             
                             return (
                               <TableRow key={index}>
                                 <TableCell className="font-medium">
                                   <div className="flex flex-col">
-                                    {page.title ? (
-                                      <span className="font-semibold">{page.title}</span>
-                                    ) : null}
-                                    <span 
-                                      className={page.title ? "text-xs text-muted-foreground" : ""}
-                                      title={fullPath}
-                                    >
-                                      {pathWithoutQuery}
+                                    <span className="font-semibold" title={fullPathForTooltip}>
+                                      {friendlyLabel}
                                     </span>
+                                    {page.path !== friendlyLabel && (
+                                      <span className="text-xs text-muted-foreground" title={fullPathForTooltip}>
+                                        {page.path}
+                                      </span>
+                                    )}
                                   </div>
                                 </TableCell>
                                 <TableCell>{page.views.toLocaleString()}</TableCell>

@@ -174,6 +174,27 @@ export function isAnalyticsExcluded(): boolean {
 }
 
 /**
+ * Normalize path to clean pathname (remove query string and hash)
+ * @param fullPath - Full path including query string and hash
+ * @returns Clean pathname (e.g., "/urunler" from "/urunler?page=2#section")
+ */
+function normalizePath(fullPath: string): string {
+  try {
+    // Use URL constructor to parse the path
+    // If path doesn't start with /, prepend it for URL parsing
+    const pathToParse = fullPath.startsWith('/') ? fullPath : `/${fullPath}`;
+    const url = new URL(pathToParse, window.location.origin);
+    return url.pathname;
+  } catch {
+    // Fallback: manually extract pathname
+    // Remove query string and hash
+    const withoutQuery = fullPath.split('?')[0];
+    const withoutHash = withoutQuery.split('#')[0];
+    return withoutHash || '/';
+  }
+}
+
+/**
  * Track a page view
  * @param path - Full path including query string (e.g., "/urunler?page=2")
  */
@@ -211,6 +232,11 @@ export function trackPageView(path: string): void {
     return;
   }
 
+  // Normalize path: extract clean pathname (no query/hash)
+  const cleanPath = normalizePath(path);
+  // Store full path only if it differs from clean path (has query/hash)
+  const fullPath = path !== cleanPath ? path : null;
+
   // Get referrer
   const referrer = document.referrer || null;
 
@@ -235,7 +261,8 @@ export function trackPageView(path: string): void {
 
   // Prepare tracking data
   const trackingData = {
-    path,
+    path: cleanPath, // Normalized path (pathname only)
+    full_path: fullPath, // Original path with query/hash (if different)
     referrer,
     source,
     campaign: utmCampaign || null,
