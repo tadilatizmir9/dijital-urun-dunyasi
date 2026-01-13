@@ -1459,7 +1459,7 @@ export default function AdminAnalytics() {
                       <TableHeader>
                         <TableRow>
                           <TableHead>Gün</TableHead>
-                          <TableHead>Sayfa Görüntüleme</TableHead>
+                          <TableHead>Görüntüleme</TableHead>
                           <TableHead>Oturum</TableHead>
                           <TableHead>Ziyaretçi</TableHead>
                         </TableRow>
