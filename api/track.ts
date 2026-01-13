@@ -118,8 +118,11 @@ export default async function handler(req: any, res: any) {
 
     // Return 204 No Content on success
     return res.status(204).end();
-  } catch (error) {
-    console.error('[track] Unexpected error:', error);
-    return res.status(500).json({ error: 'Internal server error' });
+} catch (error: any) {
+    console.error("TRACK ERROR:", error);
+    return res.status(500).json({
+      error: "Failed to track page view",
+      details: error?.message ?? error
+    });
   }
 }
