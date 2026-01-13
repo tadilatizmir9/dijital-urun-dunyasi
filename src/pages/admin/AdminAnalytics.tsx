@@ -37,6 +37,18 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart";
 import { Line, LineChart, CartesianGrid, XAxis, YAxis } from "recharts";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { CalendarIcon } from "lucide-react";
+import { format } from "date-fns";
+import { tr } from "date-fns/locale";
+import {
+  getTodayRange,
+  getYesterdayRange,
+  getCustomRange,
+  getPresetRange,
+  formatDateRange,
+} from "@/lib/dateRange";
 
 export default function AdminAnalytics() {
   const [loading, setLoading] = useState(true);
@@ -58,6 +70,9 @@ export default function AdminAnalytics() {
     posts: { date: string; count: number }[];
   }>({ products: [], posts: [] });
   const [visitorDateRange, setVisitorDateRange] = useState<24 | 7 | 30>(7);
+  const [visitorMode, setVisitorMode] = useState<'preset' | 'range'>('preset');
+  const [visitorPreset, setVisitorPreset] = useState<'24h' | '7d' | '30d' | 'today' | 'yesterday' | 'custom'>('7d');
+  const [visitorRange, setVisitorRange] = useState<{ from: Date | null; to: Date | null }>({ from: null, to: null });
   const [visitorStats, setVisitorStats] = useState<{
     totalViews: number;
     uniqueSessions: number;
@@ -568,68 +583,157 @@ export default function AdminAnalytics() {
 
   const fetchVisitorAnalytics = async () => {
     try {
-      const days = visitorDateRange;
+      let startTs: string;
+      let endTs: string;
 
-      // Fetch stats
-      const { data: statsData, error: statsError } = await supabase.rpc('get_pageview_stats', {
-        days,
-      });
-
-      if (statsError) {
-        console.error('[AdminAnalytics] fetchVisitorAnalytics - stats error:', statsError);
-        // If table doesn't exist, set defaults and continue
-        if (statsError.code === '42P01' || statsError.message?.includes('relation')) {
-          setVisitorStats({ totalViews: 0, uniqueSessions: 0, uniqueVisitors: 0 });
-          setTopPages([]);
-          setTopSources([]);
-          return;
+      if (visitorMode === 'range') {
+        if (visitorPreset === 'today') {
+          const range = getTodayRange();
+          startTs = range.start;
+          endTs = range.end;
+        } else if (visitorPreset === 'yesterday') {
+          const range = getYesterdayRange();
+          startTs = range.start;
+          endTs = range.end;
+        } else if (visitorRange.from && visitorRange.to) {
+          const range = getCustomRange(visitorRange.from, visitorRange.to);
+          startTs = range.start;
+          endTs = range.end;
+        } else {
+          // Fallback to 7 days if range not set
+          const range = getPresetRange(7);
+          startTs = range.start;
+          endTs = range.end;
         }
-        throw statsError;
-      }
 
-      // RPC bazen [{ total_views: ..., unique_sessions: ..., unique_visitors: ... }] döner, bazen { total: ..., sessions: ..., visitors: ... }
-      const row = Array.isArray(statsData) ? statsData[0] : statsData;
+        // Fetch stats using range RPC
+        const { data: statsData, error: statsError } = await supabase.rpc('get_pageview_stats_range', {
+          start_ts: startTs,
+          end_ts: endTs,
+        });
 
-      // Hem total_views/unique_sessions/unique_visitors hem de total/sessions/visitors alanlarını destekle
-      const totalViews = Number(
-        row?.total_views ?? row?.total ?? 0
-      );
-      const uniqueSessions = Number(
-        row?.unique_sessions ?? row?.sessions ?? 0
-      );
-      const uniqueVisitors = Number(
-        row?.unique_visitors ?? row?.uniqueVisitors ?? row?.visitors ?? 0
-      );
+        if (statsError) {
+          console.error('[AdminAnalytics] fetchVisitorAnalytics - stats error:', statsError);
+          // If table doesn't exist, set defaults and continue
+          if (statsError.code === '42P01' || statsError.message?.includes('relation')) {
+            setVisitorStats({ totalViews: 0, uniqueSessions: 0, uniqueVisitors: 0 });
+            setTopPages([]);
+            setTopSources([]);
+            return;
+          }
+          throw statsError;
+        }
 
-      setVisitorStats({
-        totalViews,
-        uniqueSessions,
-        uniqueVisitors,
-      });
+        // RPC bazen [{ total_views: ..., unique_sessions: ..., unique_visitors: ... }] döner, bazen { total: ..., sessions: ..., visitors: ... }
+        const row = Array.isArray(statsData) ? statsData[0] : statsData;
 
-      // Fetch top pages
-      const { data: topPagesData, error: topPagesError } = await supabase.rpc('get_pageview_top_pages', {
-        days,
-        page_limit: 10,
-      });
+        // Hem total_views/unique_sessions/unique_visitors hem de total/sessions/visitors alanlarını destekle
+        const totalViews = Number(
+          row?.total_views ?? row?.total ?? 0
+        );
+        const uniqueSessions = Number(
+          row?.unique_sessions ?? row?.sessions ?? 0
+        );
+        const uniqueVisitors = Number(
+          row?.unique_visitors ?? row?.uniqueVisitors ?? row?.visitors ?? 0
+        );
 
-      if (topPagesError) {
-        console.error('[AdminAnalytics] fetchVisitorAnalytics - top pages error:', topPagesError);
-        setTopPages([]);
+        setVisitorStats({
+          totalViews,
+          uniqueSessions,
+          uniqueVisitors,
+        });
+
+        // Fetch top pages using range RPC
+        const { data: topPagesData, error: topPagesError } = await supabase.rpc('get_pageview_top_pages_range', {
+          start_ts: startTs,
+          end_ts: endTs,
+        });
+
+        if (topPagesError) {
+          console.error('[AdminAnalytics] fetchVisitorAnalytics - top pages error:', topPagesError);
+          setTopPages([]);
+        } else {
+          setTopPages(topPagesData || []);
+        }
+
+        // Fetch sources using range RPC
+        const { data: sourcesData, error: sourcesError } = await supabase.rpc('get_pageview_sources_range', {
+          start_ts: startTs,
+          end_ts: endTs,
+        });
+
+        if (sourcesError) {
+          console.error('[AdminAnalytics] fetchVisitorAnalytics - sources error:', sourcesError);
+          setTopSources([]);
+        } else {
+          setTopSources(sourcesData || []);
+        }
       } else {
-        setTopPages(topPagesData || []);
-      }
+        // Preset mode: use existing days-based RPCs
+        const days = visitorDateRange;
 
-      // Fetch sources
-      const { data: sourcesData, error: sourcesError } = await supabase.rpc('get_pageview_sources', {
-        days,
-      });
+        // Fetch stats
+        const { data: statsData, error: statsError } = await supabase.rpc('get_pageview_stats', {
+          days,
+        });
 
-      if (sourcesError) {
-        console.error('[AdminAnalytics] fetchVisitorAnalytics - sources error:', sourcesError);
-        setTopSources([]);
-      } else {
-        setTopSources(sourcesData || []);
+        if (statsError) {
+          console.error('[AdminAnalytics] fetchVisitorAnalytics - stats error:', statsError);
+          // If table doesn't exist, set defaults and continue
+          if (statsError.code === '42P01' || statsError.message?.includes('relation')) {
+            setVisitorStats({ totalViews: 0, uniqueSessions: 0, uniqueVisitors: 0 });
+            setTopPages([]);
+            setTopSources([]);
+            return;
+          }
+          throw statsError;
+        }
+
+        // RPC bazen [{ total_views: ..., unique_sessions: ..., unique_visitors: ... }] döner, bazen { total: ..., sessions: ..., visitors: ... }
+        const row = Array.isArray(statsData) ? statsData[0] : statsData;
+
+        // Hem total_views/unique_sessions/unique_visitors hem de total/sessions/visitors alanlarını destekle
+        const totalViews = Number(
+          row?.total_views ?? row?.total ?? 0
+        );
+        const uniqueSessions = Number(
+          row?.unique_sessions ?? row?.sessions ?? 0
+        );
+        const uniqueVisitors = Number(
+          row?.unique_visitors ?? row?.uniqueVisitors ?? row?.visitors ?? 0
+        );
+
+        setVisitorStats({
+          totalViews,
+          uniqueSessions,
+          uniqueVisitors,
+        });
+
+        // Fetch top pages
+        const { data: topPagesData, error: topPagesError } = await supabase.rpc('get_pageview_top_pages', {
+          days,
+          page_limit: 10,
+        });
+
+        if (topPagesError) {
+          console.error('[AdminAnalytics] fetchVisitorAnalytics - top pages error:', topPagesError);
+          setTopPages([]);
+        } else {
+          setTopPages(topPagesData || []);
+        }
+
+        // Fetch sources
+        const { data: sourcesData, error: sourcesError } = await supabase.rpc('get_pageview_sources', {
+          days,
+        });
+
+        if (sourcesError) {
+          console.error('[AdminAnalytics] fetchVisitorAnalytics - sources error:', sourcesError);
+          setTopSources([]);
+        } else {
+          setTopSources(sourcesData || []);
+        }
       }
     } catch (e) {
       console.error('[AdminAnalytics] fetchVisitorAnalytics error:', e);
@@ -642,33 +746,81 @@ export default function AdminAnalytics() {
 
   const fetchVisitorTrends = async () => {
     try {
-      const days = visitorTrendDays;
+      let startTs: string;
+      let endTs: string;
 
-      const { data: trendsData, error: trendsError } = await supabase.rpc('get_pageview_daily', {
-        days,
-      });
-
-      if (trendsError) {
-        console.error('[AdminAnalytics] fetchVisitorTrends - RPC error:', trendsError);
-        if (trendsError.code === '42P01' || trendsError.message?.includes('relation') || trendsError.message?.includes('function')) {
-          setDailyTrend([]);
-          return;
+      if (visitorMode === 'range') {
+        if (visitorPreset === 'today') {
+          const range = getTodayRange();
+          startTs = range.start;
+          endTs = range.end;
+        } else if (visitorPreset === 'yesterday') {
+          const range = getYesterdayRange();
+          startTs = range.start;
+          endTs = range.end;
+        } else if (visitorRange.from && visitorRange.to) {
+          const range = getCustomRange(visitorRange.from, visitorRange.to);
+          startTs = range.start;
+          endTs = range.end;
+        } else {
+          // Fallback to 7 days if range not set
+          const range = getPresetRange(7);
+          startTs = range.start;
+          endTs = range.end;
         }
-        throw trendsError;
+
+        const { data: trendsData, error: trendsError } = await supabase.rpc('get_pageview_daily_range', {
+          start_ts: startTs,
+          end_ts: endTs,
+        });
+
+        if (trendsError) {
+          console.error('[AdminAnalytics] fetchVisitorTrends - RPC error:', trendsError);
+          if (trendsError.code === '42P01' || trendsError.message?.includes('relation') || trendsError.message?.includes('function')) {
+            setDailyTrend([]);
+            return;
+          }
+          throw trendsError;
+        }
+
+        const dataArray = Array.isArray(trendsData) ? trendsData : (trendsData ? [trendsData] : []);
+        const formattedData = dataArray.map((item: any) => ({
+          day: item.day || item.date || new Date().toISOString().split('T')[0],
+          views: Number(item.views ?? item.total_views ?? 0),
+          sessions: Number(item.sessions ?? item.unique_sessions ?? 0),
+          visitors: Number(item.visitors ?? item.unique_visitors ?? 0),
+        }));
+        setDailyTrend(formattedData);
+      } else {
+        // Preset mode: use existing days-based RPC
+        const days = visitorTrendDays;
+
+        const { data: trendsData, error: trendsError } = await supabase.rpc('get_pageview_daily', {
+          days,
+        });
+
+        if (trendsError) {
+          console.error('[AdminAnalytics] fetchVisitorTrends - RPC error:', trendsError);
+          if (trendsError.code === '42P01' || trendsError.message?.includes('relation') || trendsError.message?.includes('function')) {
+            setDailyTrend([]);
+            return;
+          }
+          throw trendsError;
+        }
+
+        // Handle array/object safely
+        const dataArray = Array.isArray(trendsData) ? trendsData : (trendsData ? [trendsData] : []);
+
+        // Format data for chart
+        const formattedData = dataArray.map((item: any) => ({
+          day: item.day || item.date || new Date().toISOString().split('T')[0],
+          views: Number(item.views ?? item.total_views ?? 0),
+          sessions: Number(item.sessions ?? item.unique_sessions ?? 0),
+          visitors: Number(item.visitors ?? item.unique_visitors ?? 0),
+        }));
+
+        setDailyTrend(formattedData);
       }
-
-      // Handle array/object safely
-      const dataArray = Array.isArray(trendsData) ? trendsData : (trendsData ? [trendsData] : []);
-
-      // Format data for chart
-      const formattedData = dataArray.map((item: any) => ({
-        day: item.day || item.date || new Date().toISOString().split('T')[0],
-        views: Number(item.views ?? item.total_views ?? 0),
-        sessions: Number(item.sessions ?? item.unique_sessions ?? 0),
-        visitors: Number(item.visitors ?? item.unique_visitors ?? 0),
-      }));
-
-      setDailyTrend(formattedData);
     } catch (e) {
       console.error('[AdminAnalytics] fetchVisitorTrends error:', e);
       setDailyTrend([]);
@@ -680,7 +832,7 @@ export default function AdminAnalytics() {
       fetchVisitorTrends();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [visitorTrendDays]);
+  }, [visitorTrendDays, visitorMode, visitorPreset, visitorRange]);
 
   const loadTrendData = async (days: 7 | 30) => {
     try {
@@ -731,7 +883,7 @@ export default function AdminAnalytics() {
       fetchVisitorAnalytics();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [visitorDateRange]);
+  }, [visitorDateRange, visitorMode, visitorPreset, visitorRange]);
 
   const handleCheckRedirect = async (redirectId: string) => {
     try {
@@ -970,28 +1122,101 @@ export default function AdminAnalytics() {
                       <Users className="h-5 w-5" />
                       Ziyaretçi Analitiği (First-party)
                     </CardTitle>
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 flex-wrap">
+                      {/* Preset buttons */}
                       <Button
-                        variant={visitorDateRange === 24 ? "default" : "outline"}
+                        variant={visitorMode === 'preset' && visitorDateRange === 24 ? "default" : "outline"}
                         size="sm"
-                        onClick={() => setVisitorDateRange(24)}
+                        onClick={() => {
+                          setVisitorMode('preset');
+                          setVisitorDateRange(24);
+                        }}
                       >
                         24h
                       </Button>
                       <Button
-                        variant={visitorDateRange === 7 ? "default" : "outline"}
+                        variant={visitorMode === 'preset' && visitorDateRange === 7 ? "default" : "outline"}
                         size="sm"
-                        onClick={() => setVisitorDateRange(7)}
+                        onClick={() => {
+                          setVisitorMode('preset');
+                          setVisitorDateRange(7);
+                        }}
                       >
                         7d
                       </Button>
                       <Button
-                        variant={visitorDateRange === 30 ? "default" : "outline"}
+                        variant={visitorMode === 'preset' && visitorDateRange === 30 ? "default" : "outline"}
                         size="sm"
-                        onClick={() => setVisitorDateRange(30)}
+                        onClick={() => {
+                          setVisitorMode('preset');
+                          setVisitorDateRange(30);
+                        }}
                       >
                         30d
                       </Button>
+                      {/* Range buttons */}
+                      <Button
+                        variant={visitorMode === 'range' && visitorPreset === 'today' ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => {
+                          setVisitorMode('range');
+                          setVisitorPreset('today');
+                        }}
+                      >
+                        Bugün
+                      </Button>
+                      <Button
+                        variant={visitorMode === 'range' && visitorPreset === 'yesterday' ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => {
+                          setVisitorMode('range');
+                          setVisitorPreset('yesterday');
+                        }}
+                      >
+                        Dün
+                      </Button>
+                      {/* Custom range picker */}
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant={visitorMode === 'range' && visitorPreset === 'custom' ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => {
+                              setVisitorMode('range');
+                              setVisitorPreset('custom');
+                            }}
+                          >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {visitorRange.from && visitorRange.to
+                              ? formatDateRange(
+                                  getCustomRange(visitorRange.from, visitorRange.to).start,
+                                  getCustomRange(visitorRange.from, visitorRange.to).end
+                                )
+                              : "Özel Aralık"}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="end">
+                          <Calendar
+                            initialFocus
+                            mode="range"
+                            defaultMonth={visitorRange.from || new Date()}
+                            selected={{
+                              from: visitorRange.from || undefined,
+                              to: visitorRange.to || undefined,
+                            }}
+                            onSelect={(range) => {
+                              if (range?.from && range?.to) {
+                                setVisitorRange({ from: range.from, to: range.to });
+                                setVisitorPreset('custom');
+                              } else if (range?.from) {
+                                setVisitorRange({ from: range.from, to: null });
+                              }
+                            }}
+                            numberOfMonths={2}
+                            locale={tr}
+                          />
+                        </PopoverContent>
+                      </Popover>
                     </div>
                   </div>
                 </CardHeader>
@@ -1012,7 +1237,20 @@ export default function AdminAnalytics() {
                       </CardHeader>
                       <CardContent>
                         <div className="text-2xl font-bold">{visitorStats.totalViews.toLocaleString()}</div>
-                        <p className="text-xs text-muted-foreground mt-1">Son {visitorDateRange === 24 ? '24 saat' : visitorDateRange === 7 ? '7 gün' : '30 gün'}</p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {visitorMode === 'preset'
+                            ? `Son ${visitorDateRange === 24 ? '24 saat' : visitorDateRange === 7 ? '7 gün' : '30 gün'}`
+                            : visitorPreset === 'today'
+                            ? 'Bugün'
+                            : visitorPreset === 'yesterday'
+                            ? 'Dün'
+                            : visitorRange.from && visitorRange.to
+                            ? formatDateRange(
+                                getCustomRange(visitorRange.from, visitorRange.to).start,
+                                getCustomRange(visitorRange.from, visitorRange.to).end
+                              )
+                            : 'Seçilen aralık'}
+                        </p>
                         <p className="text-xs text-muted-foreground mt-1">Toplam görüntüleme sayısı</p>
                       </CardContent>
                     </Card>
@@ -1024,7 +1262,20 @@ export default function AdminAnalytics() {
                       </CardHeader>
                       <CardContent>
                         <div className="text-2xl font-bold">{visitorStats.uniqueSessions.toLocaleString()}</div>
-                        <p className="text-xs text-muted-foreground mt-1">Son {visitorDateRange === 24 ? '24 saat' : visitorDateRange === 7 ? '7 gün' : '30 gün'}</p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {visitorMode === 'preset'
+                            ? `Son ${visitorDateRange === 24 ? '24 saat' : visitorDateRange === 7 ? '7 gün' : '30 gün'}`
+                            : visitorPreset === 'today'
+                            ? 'Bugün'
+                            : visitorPreset === 'yesterday'
+                            ? 'Dün'
+                            : visitorRange.from && visitorRange.to
+                            ? formatDateRange(
+                                getCustomRange(visitorRange.from, visitorRange.to).start,
+                                getCustomRange(visitorRange.from, visitorRange.to).end
+                              )
+                            : 'Seçilen aralık'}
+                        </p>
                         <p className="text-xs text-muted-foreground mt-1">30 dakikalık ziyaret oturumları</p>
                       </CardContent>
                     </Card>
@@ -1036,7 +1287,20 @@ export default function AdminAnalytics() {
                       </CardHeader>
                       <CardContent>
                         <div className="text-2xl font-bold">{visitorStats.uniqueVisitors.toLocaleString()}</div>
-                        <p className="text-xs text-muted-foreground mt-1">Son {visitorDateRange === 24 ? '24 saat' : visitorDateRange === 7 ? '7 gün' : '30 gün'}</p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {visitorMode === 'preset'
+                            ? `Son ${visitorDateRange === 24 ? '24 saat' : visitorDateRange === 7 ? '7 gün' : '30 gün'}`
+                            : visitorPreset === 'today'
+                            ? 'Bugün'
+                            : visitorPreset === 'yesterday'
+                            ? 'Dün'
+                            : visitorRange.from && visitorRange.to
+                            ? formatDateRange(
+                                getCustomRange(visitorRange.from, visitorRange.to).start,
+                                getCustomRange(visitorRange.from, visitorRange.to).end
+                              )
+                            : 'Seçilen aralık'}
+                        </p>
                         <p className="text-xs text-muted-foreground mt-1">Tarayıcı bazlı tekil kullanıcı</p>
                         {visitorStats.uniqueVisitors === 0 && visitorStats.totalViews > 0 && (
                           <p className="text-xs text-muted-foreground mt-1 italic">Yeni ziyaretçi verisi toplanıyor</p>
