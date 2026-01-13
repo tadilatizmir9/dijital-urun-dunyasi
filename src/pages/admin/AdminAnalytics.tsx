@@ -551,7 +551,14 @@ export default function AdminAnalytics() {
       const { data: statsData, error: statsError } = await supabase.rpc('get_pageview_stats', {
         days,
       });
+      const row = Array.isArray(statsData) ? statsData[0] : statsData;
 
+      const total = Number(row?.total ?? 0);
+      const sessions = Number(row?.sessions ?? 0);
+      
+      // state'lerin neyse ona bas:
+      setVisitorTotalViews(total);
+      setVisitorUniqueSessions(sessions);
       if (statsError) {
         console.error('[AdminAnalytics] fetchVisitorAnalytics - stats error:', statsError);
         // If table doesn't exist, set defaults and continue
