@@ -564,12 +564,20 @@ export default function AdminAnalytics() {
         throw statsError;
       }
 
-      // RPC bazen [{ total_views: ..., unique_sessions: ... }] döner
+      // RPC bazen [{ total_views: ..., unique_sessions: ... }] döner, bazen { total: ..., sessions: ... }
       const row = Array.isArray(statsData) ? statsData[0] : statsData;
 
+      // Hem total_views/unique_sessions hem de total/sessions alanlarını destekle
+      const totalViews = Number(
+        row?.total_views ?? row?.total ?? 0
+      );
+      const uniqueSessions = Number(
+        row?.unique_sessions ?? row?.sessions ?? 0
+      );
+
       setVisitorStats({
-        totalViews: Number(row?.total_views ?? 0),
-        uniqueSessions: Number(row?.unique_sessions ?? 0),
+        totalViews,
+        uniqueSessions,
       });
 
       // Fetch top pages
