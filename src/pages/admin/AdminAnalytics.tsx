@@ -594,6 +594,7 @@ export default function AdminAnalytics() {
       let endTs: string;
 
       // Unify all date range calculations - ALL buttons use *_range RPC functions
+      // Ensure "Bugün/Dün" preset buttons and manual date picker produce identical parameters
       if (visitorMode === 'preset') {
         // 24h/7d/30d presets: convert to hours and use range RPC
         const hours = visitorDateRange === 24 ? 24 : visitorDateRange === 7 ? 7 * 24 : 30 * 24;
@@ -601,14 +602,18 @@ export default function AdminAnalytics() {
         startTs = range.start;
         endTs = range.end;
       } else if (visitorPreset === 'today') {
+        // "Bugün" button: use getTodayRange() helper
         const range = getTodayRange();
         startTs = range.start;
         endTs = range.end;
       } else if (visitorPreset === 'yesterday') {
+        // "Dün" button: use getYesterdayRange() helper
         const range = getYesterdayRange();
         startTs = range.start;
         endTs = range.end;
       } else if (visitorRange.from && visitorRange.to) {
+        // Custom date picker: use getCustomRange() helper
+        // This ensures same dates selected manually produce identical parameters as preset buttons
         const range = getCustomRange(visitorRange.from, visitorRange.to);
         startTs = range.start;
         endTs = range.end;
@@ -657,6 +662,18 @@ export default function AdminAnalytics() {
         row?.unique_visitors ?? row?.uniqueVisitors ?? row?.visitors ?? 0
       );
 
+      // Debug logging when no data
+      if (totalViews === 0 && uniqueSessions === 0 && uniqueVisitors === 0) {
+        console.log('[AdminAnalytics] Debug - empty stats:', {
+          mode: visitorMode,
+          preset: visitorPreset,
+          start_ts: startTs,
+          end_ts: endTs,
+          rpcName: 'get_pageview_stats_range',
+          rowsLength: 0,
+        });
+      }
+
       // Check again before setting state
       if (requestIdRef.current !== currentRequestId) {
         console.log('[AdminAnalytics] Ignoring stale stats update for request', currentRequestId);
@@ -685,6 +702,17 @@ export default function AdminAnalytics() {
         console.error('[AdminAnalytics] fetchVisitorAnalytics - top pages error:', topPagesError);
         setTopPages([]);
       } else {
+        const rowsLength = Array.isArray(topPagesData) ? topPagesData.length : (topPagesData ? 1 : 0);
+        if (rowsLength === 0) {
+          console.log('[AdminAnalytics] Debug - empty top pages:', {
+            mode: visitorMode,
+            preset: visitorPreset,
+            start_ts: startTs,
+            end_ts: endTs,
+            rpcName: 'get_pageview_top_pages_range',
+            rowsLength: 0,
+          });
+        }
         setTopPages(topPagesData || []);
       }
 
@@ -704,6 +732,17 @@ export default function AdminAnalytics() {
         console.error('[AdminAnalytics] fetchVisitorAnalytics - sources error:', sourcesError);
         setTopSources([]);
       } else {
+        const rowsLength = Array.isArray(sourcesData) ? sourcesData.length : (sourcesData ? 1 : 0);
+        if (rowsLength === 0) {
+          console.log('[AdminAnalytics] Debug - empty sources:', {
+            mode: visitorMode,
+            preset: visitorPreset,
+            start_ts: startTs,
+            end_ts: endTs,
+            rpcName: 'get_pageview_sources_range',
+            rowsLength: 0,
+          });
+        }
         setTopSources(sourcesData || []);
       }
     } catch (e) {
@@ -779,6 +818,18 @@ export default function AdminAnalytics() {
         sessions: Number(item.sessions ?? item.unique_sessions ?? 0),
         visitors: Number(item.visitors ?? item.unique_visitors ?? 0),
       }));
+
+      // Debug logging when no data
+      if (formattedData.length === 0) {
+        console.log('[AdminAnalytics] Debug - empty trends:', {
+          mode: visitorMode,
+          preset: visitorPreset,
+          start_ts: startTs,
+          end_ts: endTs,
+          rpcName: 'get_pageview_daily_range',
+          rowsLength: 0,
+        });
+      }
 
       // Check again before setting state
       if (requestIdRef.current !== currentRequestId) {

@@ -26,78 +26,59 @@ export function addDaysLocal(date: Date, days: number): Date {
 }
 
 /**
- * Convert local Date to ISO string (for timestamptz)
- * This preserves the local time but sends it as ISO string
- */
-function toISOStringLocal(date: Date): string {
-  // Get local time components
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  const hours = String(date.getHours()).padStart(2, '0');
-  const minutes = String(date.getMinutes()).padStart(2, '0');
-  const seconds = String(date.getSeconds()).padStart(2, '0');
-  const ms = String(date.getMilliseconds()).padStart(3, '0');
-  
-  // Get timezone offset
-  const offset = -date.getTimezoneOffset();
-  const offsetHours = String(Math.floor(Math.abs(offset) / 60)).padStart(2, '0');
-  const offsetMinutes = String(Math.abs(offset) % 60).padStart(2, '0');
-  const offsetSign = offset >= 0 ? '+' : '-';
-  
-  return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}.${ms}${offsetSign}${offsetHours}:${offsetMinutes}`;
-}
-
-/**
  * Get start of day in local timezone as ISO string (for timestamptz)
+ * Returns ISO string via toISOString() - the Date object is constructed in local time,
+ * so toISOString() correctly converts it to UTC representing that local moment
  */
 export function getStartOfDay(date: Date): string {
   const localStart = startOfDayLocal(date);
-  return toISOStringLocal(localStart);
+  return localStart.toISOString();
 }
 
 /**
  * Get start of next day (exclusive end for date ranges)
+ * Returns ISO string via toISOString() - ensures [start, end) exclusive range
  */
 export function getStartOfNextDay(date: Date): string {
   const nextDay = addDaysLocal(date, 1);
   const localStart = startOfDayLocal(nextDay);
-  return toISOStringLocal(localStart);
+  return localStart.toISOString();
 }
 
 /**
  * Get today's date range (start of today to start of tomorrow)
- * Today = [today 00:00 local, tomorrow 00:00 local)
+ * Today = [today 00:00 local, tomorrow 00:00 local) - end is exclusive
+ * Returns ISO strings via toISOString()
  */
 export function getTodayRange(): { start: string; end: string } {
   const today = new Date();
-  return {
-    start: getStartOfDay(today),
-    end: getStartOfNextDay(today),
-  };
+  const start = getStartOfDay(today); // today 00:00 local -> ISO string
+  const end = getStartOfNextDay(today); // tomorrow 00:00 local -> ISO string (exclusive)
+  return { start, end };
 }
 
 /**
  * Get yesterday's date range (start of yesterday to start of today)
- * Yesterday = [yesterday 00:00 local, today 00:00 local)
+ * Yesterday = [yesterday 00:00 local, today 00:00 local) - end is exclusive
+ * Returns ISO strings via toISOString()
  */
 export function getYesterdayRange(): { start: string; end: string } {
   const today = new Date();
   const yesterday = addDaysLocal(today, -1);
-  return {
-    start: getStartOfDay(yesterday),
-    end: getStartOfDay(today),
-  };
+  const start = getStartOfDay(yesterday); // yesterday 00:00 local -> ISO string
+  const end = getStartOfDay(today); // today 00:00 local -> ISO string (exclusive)
+  return { start, end };
 }
 
 /**
  * Get custom date range (start of from date to start of (to + 1 day))
+ * Custom = [from 00:00 local, (to+1) 00:00 local) - end is exclusive
+ * Returns ISO strings via toISOString()
  */
 export function getCustomRange(from: Date, to: Date): { start: string; end: string } {
-  return {
-    start: getStartOfDay(from),
-    end: getStartOfNextDay(to),
-  };
+  const start = getStartOfDay(from); // from 00:00 local -> ISO string
+  const end = getStartOfNextDay(to); // (to+1) 00:00 local -> ISO string (exclusive)
+  return { start, end };
 }
 
 /**
