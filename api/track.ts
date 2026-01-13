@@ -122,7 +122,7 @@ export default async function handler(req: any, res: any) {
     console.error("TRACK ERROR:", error);
     return res.status(500).json({
       error: "Failed to track page view",
-      details: error?.message ?? error
+      details: error?.message || error
     });
   }
 }
