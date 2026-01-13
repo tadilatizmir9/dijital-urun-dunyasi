@@ -551,14 +551,7 @@ export default function AdminAnalytics() {
       const { data: statsData, error: statsError } = await supabase.rpc('get_pageview_stats', {
         days,
       });
-      const row = Array.isArray(statsData) ? statsData[0] : statsData;
 
-      const total = Number(row?.total ?? 0);
-      const sessions = Number(row?.sessions ?? 0);
-      
-      // state'lerin neyse ona bas:
-      setVisitorTotalViews(total);
-      setVisitorUniqueSessions(sessions);
       if (statsError) {
         console.error('[AdminAnalytics] fetchVisitorAnalytics - stats error:', statsError);
         // If table doesn't exist, set defaults and continue
@@ -571,12 +564,13 @@ export default function AdminAnalytics() {
         throw statsError;
       }
 
-      if (statsData && statsData.length > 0) {
-        setVisitorStats({
-          totalViews: Number(statsData[0].total_views) || 0,
-          uniqueSessions: Number(statsData[0].unique_sessions) || 0,
-        });
-      }
+      // RPC bazen [{ total_views: ..., unique_sessions: ... }] döner
+      const row = Array.isArray(statsData) ? statsData[0] : statsData;
+
+      setVisitorStats({
+        totalViews: Number(row?.total_views ?? 0),
+        uniqueSessions: Number(row?.unique_sessions ?? 0),
+      });
 
       // Fetch top pages
       const { data: topPagesData, error: topPagesError } = await supabase.rpc('get_pageview_top_pages', {
