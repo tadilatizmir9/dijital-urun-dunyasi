@@ -24,6 +24,8 @@ import {
   CheckCircle2,
   XCircle,
   BarChart3,
+  Users,
+  Eye,
 } from "lucide-react";
 import { Helmet } from "react-helmet-async";
 import { toast } from "@/hooks/use-toast";
@@ -49,6 +51,21 @@ export default function AdminAnalytics() {
     products: { date: string; count: number }[];
     posts: { date: string; count: number }[];
   }>({ products: [], posts: [] });
+  const [visitorDateRange, setVisitorDateRange] = useState<24 | 7 | 30>(7);
+  const [visitorStats, setVisitorStats] = useState<{
+    totalViews: number;
+    uniqueSessions: number;
+  }>({ totalViews: 0, uniqueSessions: 0 });
+  const [topPages, setTopPages] = useState<Array<{
+    path: string;
+    views: number;
+    last_seen: string;
+  }>>([]);
+  const [topSources, setTopSources] = useState<Array<{
+    source: string;
+    views: number;
+    unique_sessions: number;
+  }>>([]);
 
   useEffect(() => {
     fetchAllData();
@@ -65,6 +82,7 @@ export default function AdminAnalytics() {
         fetchCategoryPerformance(),
         fetchLinkHealth(),
         fetchTrendData(),
+        fetchVisitorAnalytics(),
       ]);
     } catch (e: any) {
       console.error("[AdminAnalytics] fetchAllData error:", e);
@@ -525,6 +543,75 @@ export default function AdminAnalytics() {
     }
   };
 
+  const fetchVisitorAnalytics = async () => {
+    try {
+      const days = visitorDateRange;
+
+      // Fetch stats
+      const { data: statsData, error: statsError } = await supabase.rpc('get_pageview_stats', {
+        days,
+      });
+
+      if (statsError) {
+        console.error('[AdminAnalytics] fetchVisitorAnalytics - stats error:', statsError);
+        // If table doesn't exist, set defaults and continue
+        if (statsError.code === '42P01' || statsError.message?.includes('relation')) {
+          setVisitorStats({ totalViews: 0, uniqueSessions: 0 });
+          setTopPages([]);
+          setTopSources([]);
+          return;
+        }
+        throw statsError;
+      }
+
+      if (statsData && statsData.length > 0) {
+        setVisitorStats({
+          totalViews: Number(statsData[0].total_views) || 0,
+          uniqueSessions: Number(statsData[0].unique_sessions) || 0,
+        });
+      }
+
+      // Fetch top pages
+      const { data: topPagesData, error: topPagesError } = await supabase.rpc('get_pageview_top_pages', {
+        days,
+        page_limit: 10,
+      });
+
+      if (topPagesError) {
+        console.error('[AdminAnalytics] fetchVisitorAnalytics - top pages error:', topPagesError);
+        setTopPages([]);
+      } else {
+        setTopPages(topPagesData || []);
+      }
+
+      // Fetch sources
+      const { data: sourcesData, error: sourcesError } = await supabase.rpc('get_pageview_sources', {
+        days,
+      });
+
+      if (sourcesError) {
+        console.error('[AdminAnalytics] fetchVisitorAnalytics - sources error:', sourcesError);
+        setTopSources([]);
+      } else {
+        setTopSources(sourcesData || []);
+      }
+    } catch (e) {
+      console.error('[AdminAnalytics] fetchVisitorAnalytics error:', e);
+      // Don't throw - visitor analytics is optional
+      setVisitorStats({ totalViews: 0, uniqueSessions: 0 });
+      setTopPages([]);
+      setTopSources([]);
+    }
+  };
+
+  useEffect(() => {
+    // Only fetch visitor analytics after initial load is complete
+    if (!loading) {
+      fetchVisitorAnalytics();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visitorDateRange]);
+
   const handleCheckRedirect = async (redirectId: string) => {
     try {
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
@@ -753,6 +840,148 @@ export default function AdminAnalytics() {
                   </CardContent>
                 </Card>
               </div>
+
+              {/* Ziyaretçi Analitiği */}
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="flex items-center gap-2">
+                      <Users className="h-5 w-5" />
+                      Ziyaretçi Analitiği (First-party)
+                    </CardTitle>
+                    <div className="flex gap-2">
+                      <Button
+                        variant={visitorDateRange === 24 ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setVisitorDateRange(24)}
+                      >
+                        24h
+                      </Button>
+                      <Button
+                        variant={visitorDateRange === 7 ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setVisitorDateRange(7)}
+                      >
+                        7d
+                      </Button>
+                      <Button
+                        variant={visitorDateRange === 30 ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setVisitorDateRange(30)}
+                      >
+                        30d
+                      </Button>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  {/* Visitor Stats Cards */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <Card>
+                      <CardHeader className="flex flex-row items-center justify-between pb-2">
+                        <CardTitle className="text-sm font-medium">Toplam Sayfa Görüntüleme</CardTitle>
+                        <Eye className="h-4 w-4 text-primary" />
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-2xl font-bold">{visitorStats.totalViews.toLocaleString()}</div>
+                        <p className="text-xs text-muted-foreground mt-1">Son {visitorDateRange === 24 ? '24 saat' : visitorDateRange === 7 ? '7 gün' : '30 gün'}</p>
+                      </CardContent>
+                    </Card>
+
+                    <Card>
+                      <CardHeader className="flex flex-row items-center justify-between pb-2">
+                        <CardTitle className="text-sm font-medium">Benzersiz Oturum</CardTitle>
+                        <Users className="h-4 w-4 text-secondary" />
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-2xl font-bold">{visitorStats.uniqueSessions.toLocaleString()}</div>
+                        <p className="text-xs text-muted-foreground mt-1">Son {visitorDateRange === 24 ? '24 saat' : visitorDateRange === 7 ? '7 gün' : '30 gün'}</p>
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  {/* Top Pages Table */}
+                  <div>
+                    <h3 className="text-lg font-semibold mb-4">En Çok Ziyaret Edilen Sayfalar</h3>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Sayfa</TableHead>
+                          <TableHead>Görüntüleme</TableHead>
+                          <TableHead>Son Görüntüleme</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {topPages.length === 0 ? (
+                          <TableRow>
+                            <TableCell colSpan={3} className="text-center text-muted-foreground">
+                              Veri bulunamadı
+                            </TableCell>
+                          </TableRow>
+                        ) : (
+                          topPages.map((page, index) => (
+                            <TableRow key={index}>
+                              <TableCell className="font-medium">{page.path}</TableCell>
+                              <TableCell>{page.views.toLocaleString()}</TableCell>
+                              <TableCell>
+                                {page.last_seen
+                                  ? new Date(page.last_seen).toLocaleDateString("tr-TR", {
+                                      day: "2-digit",
+                                      month: "2-digit",
+                                      year: "numeric",
+                                      hour: "2-digit",
+                                      minute: "2-digit",
+                                    })
+                                  : "-"}
+                              </TableCell>
+                            </TableRow>
+                          ))
+                        )}
+                      </TableBody>
+                    </Table>
+                  </div>
+
+                  {/* Sources Table */}
+                  <div>
+                    <h3 className="text-lg font-semibold mb-4">Traffic Kaynakları</h3>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Kaynak</TableHead>
+                          <TableHead>Görüntüleme</TableHead>
+                          <TableHead>Benzersiz Oturum</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {topSources.length === 0 ? (
+                          <TableRow>
+                            <TableCell colSpan={3} className="text-center text-muted-foreground">
+                              Veri bulunamadı
+                            </TableCell>
+                          </TableRow>
+                        ) : (
+                          topSources.map((source, index) => (
+                            <TableRow key={index}>
+                              <TableCell className="font-medium">
+                                {source.source === 'direct' ? 'Doğrudan' : 
+                                 source.source === 'google' ? 'Google' :
+                                 source.source === 'facebook' ? 'Facebook' :
+                                 source.source === 'instagram' ? 'Instagram' :
+                                 source.source === 'twitter' ? 'Twitter' :
+                                 source.source === 'linkedin' ? 'LinkedIn' :
+                                 source.source === 'referral' ? 'Referans' :
+                                 source.source}
+                              </TableCell>
+                              <TableCell>{source.views.toLocaleString()}</TableCell>
+                              <TableCell>{source.unique_sessions.toLocaleString()}</TableCell>
+                            </TableRow>
+                          ))
+                        )}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </CardContent>
+              </Card>
 
               {/* En Çok Tıklananlar */}
               <Card>
