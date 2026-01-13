@@ -55,7 +55,8 @@ export default function AdminAnalytics() {
   const [visitorStats, setVisitorStats] = useState<{
     totalViews: number;
     uniqueSessions: number;
-  }>({ totalViews: 0, uniqueSessions: 0 });
+    uniqueVisitors: number;
+  }>({ totalViews: 0, uniqueSessions: 0, uniqueVisitors: 0 });
   const [topPages, setTopPages] = useState<Array<{
     path: string;
     views: number;
@@ -556,7 +557,7 @@ export default function AdminAnalytics() {
         console.error('[AdminAnalytics] fetchVisitorAnalytics - stats error:', statsError);
         // If table doesn't exist, set defaults and continue
         if (statsError.code === '42P01' || statsError.message?.includes('relation')) {
-          setVisitorStats({ totalViews: 0, uniqueSessions: 0 });
+          setVisitorStats({ totalViews: 0, uniqueSessions: 0, uniqueVisitors: 0 });
           setTopPages([]);
           setTopSources([]);
           return;
@@ -564,20 +565,24 @@ export default function AdminAnalytics() {
         throw statsError;
       }
 
-      // RPC bazen [{ total_views: ..., unique_sessions: ... }] döner, bazen { total: ..., sessions: ... }
+      // RPC bazen [{ total_views: ..., unique_sessions: ..., unique_visitors: ... }] döner, bazen { total: ..., sessions: ..., visitors: ... }
       const row = Array.isArray(statsData) ? statsData[0] : statsData;
 
-      // Hem total_views/unique_sessions hem de total/sessions alanlarını destekle
+      // Hem total_views/unique_sessions/unique_visitors hem de total/sessions/visitors alanlarını destekle
       const totalViews = Number(
         row?.total_views ?? row?.total ?? 0
       );
       const uniqueSessions = Number(
         row?.unique_sessions ?? row?.sessions ?? 0
       );
+      const uniqueVisitors = Number(
+        row?.unique_visitors ?? row?.uniqueVisitors ?? row?.visitors ?? 0
+      );
 
       setVisitorStats({
         totalViews,
         uniqueSessions,
+        uniqueVisitors,
       });
 
       // Fetch top pages
@@ -607,7 +612,7 @@ export default function AdminAnalytics() {
     } catch (e) {
       console.error('[AdminAnalytics] fetchVisitorAnalytics error:', e);
       // Don't throw - visitor analytics is optional
-      setVisitorStats({ totalViews: 0, uniqueSessions: 0 });
+      setVisitorStats({ totalViews: 0, uniqueSessions: 0, uniqueVisitors: 0 });
       setTopPages([]);
       setTopSources([]);
     }
@@ -885,7 +890,7 @@ export default function AdminAnalytics() {
                 </CardHeader>
                 <CardContent className="space-y-6">
                   {/* Visitor Stats Cards */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     <Card>
                       <CardHeader className="flex flex-row items-center justify-between pb-2">
                         <CardTitle className="text-sm font-medium">Toplam Sayfa Görüntüleme</CardTitle>
@@ -904,6 +909,17 @@ export default function AdminAnalytics() {
                       </CardHeader>
                       <CardContent>
                         <div className="text-2xl font-bold">{visitorStats.uniqueSessions.toLocaleString()}</div>
+                        <p className="text-xs text-muted-foreground mt-1">Son {visitorDateRange === 24 ? '24 saat' : visitorDateRange === 7 ? '7 gün' : '30 gün'}</p>
+                      </CardContent>
+                    </Card>
+
+                    <Card>
+                      <CardHeader className="flex flex-row items-center justify-between pb-2">
+                        <CardTitle className="text-sm font-medium">Ziyaretçi</CardTitle>
+                        <Users className="h-4 w-4 text-primary" />
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-2xl font-bold">{visitorStats.uniqueVisitors.toLocaleString()}</div>
                         <p className="text-xs text-muted-foreground mt-1">Son {visitorDateRange === 24 ? '24 saat' : visitorDateRange === 7 ? '7 gün' : '30 gün'}</p>
                       </CardContent>
                     </Card>
