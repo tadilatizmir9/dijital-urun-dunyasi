@@ -31,6 +31,12 @@ import { Helmet } from "react-helmet-async";
 import { toast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+} from "@/components/ui/chart";
+import { Line, LineChart, CartesianGrid, XAxis, YAxis } from "recharts";
 
 export default function AdminAnalytics() {
   const [loading, setLoading] = useState(true);
@@ -61,11 +67,18 @@ export default function AdminAnalytics() {
     path: string;
     views: number;
     last_seen: string;
+    title?: string | null;
   }>>([]);
   const [topSources, setTopSources] = useState<Array<{
     source: string;
     views: number;
     unique_sessions: number;
+  }>>([]);
+  const [visitorTrendDays, setVisitorTrendDays] = useState<7 | 30>(7);
+  const [visitorTrendData, setVisitorTrendData] = useState<Array<{
+    date: string;
+    total_views: number;
+    unique_visitors: number;
   }>>([]);
 
   useEffect(() => {
@@ -618,6 +631,46 @@ export default function AdminAnalytics() {
     }
   };
 
+  const fetchVisitorTrends = async () => {
+    try {
+      const days = visitorTrendDays;
+
+      const { data: trendsData, error: trendsError } = await supabase.rpc('get_pageview_daily_trends', {
+        days,
+      });
+
+      if (trendsError) {
+        console.error('[AdminAnalytics] fetchVisitorTrends - trends error:', trendsError);
+        if (trendsError.code === '42P01' || trendsError.message?.includes('relation') || trendsError.message?.includes('function')) {
+          setVisitorTrendData([]);
+          return;
+        }
+        throw trendsError;
+      }
+
+      // Format data for chart
+      const formattedData = Array.isArray(trendsData) 
+        ? trendsData.map((item: any) => ({
+            date: item.date || new Date().toISOString().split('T')[0],
+            total_views: Number(item.total_views ?? 0),
+            unique_visitors: Number(item.unique_visitors ?? 0),
+          }))
+        : [];
+
+      setVisitorTrendData(formattedData);
+    } catch (e) {
+      console.error('[AdminAnalytics] fetchVisitorTrends error:', e);
+      setVisitorTrendData([]);
+    }
+  };
+
+  useEffect(() => {
+    if (!loading) {
+      fetchVisitorTrends();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visitorTrendDays]);
+
   useEffect(() => {
     // Only fetch visitor analytics after initial load is complete
     if (!loading) {
@@ -889,8 +942,15 @@ export default function AdminAnalytics() {
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                  {/* Visitor Stats Cards */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <Tabs defaultValue="overview" className="space-y-6">
+                    <TabsList>
+                      <TabsTrigger value="overview">Özet</TabsTrigger>
+                      <TabsTrigger value="trend">Trend</TabsTrigger>
+                    </TabsList>
+
+                    <TabsContent value="overview" className="space-y-6">
+                      {/* Visitor Stats Cards */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     <Card>
                       <CardHeader className="flex flex-row items-center justify-between pb-2">
                         <CardTitle className="text-sm font-medium">Toplam Sayfa Görüntüleme</CardTitle>
@@ -899,6 +959,7 @@ export default function AdminAnalytics() {
                       <CardContent>
                         <div className="text-2xl font-bold">{visitorStats.totalViews.toLocaleString()}</div>
                         <p className="text-xs text-muted-foreground mt-1">Son {visitorDateRange === 24 ? '24 saat' : visitorDateRange === 7 ? '7 gün' : '30 gün'}</p>
+                        <p className="text-xs text-muted-foreground mt-1">Toplam görüntüleme sayısı</p>
                       </CardContent>
                     </Card>
 
@@ -910,6 +971,7 @@ export default function AdminAnalytics() {
                       <CardContent>
                         <div className="text-2xl font-bold">{visitorStats.uniqueSessions.toLocaleString()}</div>
                         <p className="text-xs text-muted-foreground mt-1">Son {visitorDateRange === 24 ? '24 saat' : visitorDateRange === 7 ? '7 gün' : '30 gün'}</p>
+                        <p className="text-xs text-muted-foreground mt-1">30 dakikalık ziyaret oturumları</p>
                       </CardContent>
                     </Card>
 
@@ -921,6 +983,10 @@ export default function AdminAnalytics() {
                       <CardContent>
                         <div className="text-2xl font-bold">{visitorStats.uniqueVisitors.toLocaleString()}</div>
                         <p className="text-xs text-muted-foreground mt-1">Son {visitorDateRange === 24 ? '24 saat' : visitorDateRange === 7 ? '7 gün' : '30 gün'}</p>
+                        <p className="text-xs text-muted-foreground mt-1">Tarayıcı bazlı tekil kullanıcı</p>
+                        {visitorStats.uniqueVisitors === 0 && visitorStats.totalViews > 0 && (
+                          <p className="text-xs text-muted-foreground mt-1 italic">Yeni ziyaretçi verisi toplanıyor</p>
+                        )}
                       </CardContent>
                     </Card>
                   </div>
@@ -944,23 +1010,42 @@ export default function AdminAnalytics() {
                             </TableCell>
                           </TableRow>
                         ) : (
-                          topPages.map((page, index) => (
-                            <TableRow key={index}>
-                              <TableCell className="font-medium">{page.path}</TableCell>
-                              <TableCell>{page.views.toLocaleString()}</TableCell>
-                              <TableCell>
-                                {page.last_seen
-                                  ? new Date(page.last_seen).toLocaleDateString("tr-TR", {
-                                      day: "2-digit",
-                                      month: "2-digit",
-                                      year: "numeric",
-                                      hour: "2-digit",
-                                      minute: "2-digit",
-                                    })
-                                  : "-"}
-                              </TableCell>
-                            </TableRow>
-                          ))
+                          topPages.map((page, index) => {
+                            // Remove query string from path for display
+                            const pathWithoutQuery = page.path.split('?')[0];
+                            // Full path with query string for tooltip
+                            const fullPath = page.path;
+                            
+                            return (
+                              <TableRow key={index}>
+                                <TableCell className="font-medium">
+                                  <div className="flex flex-col">
+                                    {page.title ? (
+                                      <span className="font-semibold">{page.title}</span>
+                                    ) : null}
+                                    <span 
+                                      className={page.title ? "text-xs text-muted-foreground" : ""}
+                                      title={fullPath}
+                                    >
+                                      {pathWithoutQuery}
+                                    </span>
+                                  </div>
+                                </TableCell>
+                                <TableCell>{page.views.toLocaleString()}</TableCell>
+                                <TableCell>
+                                  {page.last_seen
+                                    ? new Date(page.last_seen).toLocaleDateString("tr-TR", {
+                                        day: "2-digit",
+                                        month: "2-digit",
+                                        year: "numeric",
+                                        hour: "2-digit",
+                                        minute: "2-digit",
+                                      })
+                                    : "-"}
+                                </TableCell>
+                              </TableRow>
+                            );
+                          })
                         )}
                       </TableBody>
                     </Table>
@@ -1005,6 +1090,93 @@ export default function AdminAnalytics() {
                       </TableBody>
                     </Table>
                   </div>
+                    </TabsContent>
+
+                    <TabsContent value="trend" className="space-y-6">
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-lg font-semibold">Günlük Trend</h3>
+                        <div className="flex gap-2">
+                          <Button
+                            variant={visitorTrendDays === 7 ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => setVisitorTrendDays(7)}
+                          >
+                            7 Gün
+                          </Button>
+                          <Button
+                            variant={visitorTrendDays === 30 ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => setVisitorTrendDays(30)}
+                          >
+                            30 Gün
+                          </Button>
+                        </div>
+                      </div>
+
+                      {visitorTrendData.length === 0 ? (
+                        <div className="text-center py-12 text-muted-foreground">
+                          Veri bulunamadı
+                        </div>
+                      ) : (
+                        <ChartContainer
+                          config={{
+                            total_views: {
+                              label: "Sayfa Görüntüleme",
+                              color: "hsl(var(--chart-1))",
+                            },
+                            unique_visitors: {
+                              label: "Ziyaretçi",
+                              color: "hsl(var(--chart-2))",
+                            },
+                          }}
+                          className="h-[400px]"
+                        >
+                          <LineChart data={visitorTrendData}>
+                            <CartesianGrid strokeDasharray="3 3" />
+                            <XAxis
+                              dataKey="date"
+                              tickFormatter={(value) => {
+                                const date = new Date(value);
+                                return date.toLocaleDateString("tr-TR", {
+                                  day: "2-digit",
+                                  month: "2-digit",
+                                });
+                              }}
+                            />
+                            <YAxis />
+                            <ChartTooltip
+                              content={
+                                <ChartTooltipContent
+                                  labelFormatter={(value) => {
+                                    const date = new Date(value);
+                                    return date.toLocaleDateString("tr-TR", {
+                                      day: "2-digit",
+                                      month: "long",
+                                      year: "numeric",
+                                    });
+                                  }}
+                                />
+                              }
+                            />
+                            <Line
+                              type="monotone"
+                              dataKey="total_views"
+                              stroke="hsl(var(--chart-1))"
+                              strokeWidth={2}
+                              dot={false}
+                            />
+                            <Line
+                              type="monotone"
+                              dataKey="unique_visitors"
+                              stroke="hsl(var(--chart-2))"
+                              strokeWidth={2}
+                              dot={false}
+                            />
+                          </LineChart>
+                        </ChartContainer>
+                      )}
+                    </TabsContent>
+                  </Tabs>
                 </CardContent>
               </Card>
 

@@ -230,6 +230,9 @@ export function trackPageView(path: string): void {
   // Get user agent
   const userAgent = navigator.userAgent || null;
 
+  // Get page title
+  const pageTitle = document.title || null;
+
   // Prepare tracking data
   const trackingData = {
     path,
@@ -239,6 +242,7 @@ export function trackPageView(path: string): void {
     session_id: sessionId,
     visitor_id: visitorId,
     user_agent: userAgent,
+    title: pageTitle,
   };
 
   // Send tracking request (fire-and-forget)

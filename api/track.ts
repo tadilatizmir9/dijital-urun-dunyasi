@@ -90,6 +90,7 @@ export default async function handler(req: any, res: any) {
     const campaign = sanitizeString(body.campaign, 200);
     const sessionId = sanitizeString(body.session_id, 100);
     const userAgent = sanitizeString(body.user_agent, 500);
+    const title = sanitizeString(body.title, 500);
     
     if (!sessionId) {
       return res.status(400).json({ error: 'session_id is required' });
@@ -123,6 +124,7 @@ export default async function handler(req: any, res: any) {
         session_id: sessionId,
         visitor_id: visitorId,
         user_agent: userAgent,
+        title,
         ip,
       });
 
