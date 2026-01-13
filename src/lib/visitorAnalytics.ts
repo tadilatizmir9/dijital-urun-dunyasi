@@ -13,6 +13,7 @@
 
 const SESSION_ID_KEY = 'visitor_analytics_session_id';
 const SESSION_DURATION = 30 * 60 * 1000; // 30 minutes
+const EXCLUDE_KEY = 'ds_analytics_exclude';
 
 /**
  * Get or create a session ID from localStorage
@@ -93,11 +94,47 @@ function inferSourceFromReferrer(referrer: string | null): string {
 }
 
 /**
+ * Enable analytics exclusion (for admin users)
+ */
+export function enableAnalyticsExclude(): void {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  try {
+    localStorage.setItem(EXCLUDE_KEY, '1');
+  } catch (error) {
+    console.warn('[visitorAnalytics] Failed to set exclude flag:', error);
+  }
+}
+
+/**
+ * Check if analytics is excluded
+ */
+export function isAnalyticsExcluded(): boolean {
+  if (typeof window === 'undefined') {
+    return false;
+  }
+
+  try {
+    return localStorage.getItem(EXCLUDE_KEY) === '1';
+  } catch (error) {
+    console.warn('[visitorAnalytics] Failed to check exclude flag:', error);
+    return false;
+  }
+}
+
+/**
  * Track a page view
  * @param path - Full path including query string (e.g., "/urunler?page=2")
  */
 export function trackPageView(path: string): void {
   if (typeof window === 'undefined') {
+    return;
+  }
+
+  // Skip if analytics is excluded (e.g., for admin users)
+  if (isAnalyticsExcluded()) {
     return;
   }
 

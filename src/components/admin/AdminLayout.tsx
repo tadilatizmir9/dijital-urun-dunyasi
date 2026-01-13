@@ -17,6 +17,7 @@ import { toast } from "@/hooks/use-toast";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { isTestModeOn, setTestMode as setTestModeUtil } from "@/lib/testMode";
+import { enableAnalyticsExclude } from "@/lib/visitorAnalytics";
 
 export default function AdminLayout() {
   const navigate = useNavigate();
@@ -26,6 +27,8 @@ export default function AdminLayout() {
 
   useEffect(() => {
     checkAuth();
+    // Exclude admin visits from visitor analytics
+    enableAnalyticsExclude();
   }, []);
 
   const checkAuth = async () => {
