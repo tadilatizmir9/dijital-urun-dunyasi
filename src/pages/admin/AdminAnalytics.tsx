@@ -75,10 +75,19 @@ export default function AdminAnalytics() {
     unique_sessions: number;
   }>>([]);
   const [visitorTrendDays, setVisitorTrendDays] = useState<7 | 30>(7);
+  const [dailyTrend, setDailyTrend] = useState<Array<{
+    day: string;
+    views: number;
+    sessions: number;
+    visitors: number;
+  }>>([]);
+  const [activeTab, setActiveTab] = useState<string>("summary");
+  const [trendDays, setTrendDays] = useState<7 | 30>(7);
   const [visitorTrendData, setVisitorTrendData] = useState<Array<{
-    date: string;
-    total_views: number;
-    unique_visitors: number;
+    day: string;
+    views: number;
+    sessions: number;
+    visitors: number;
   }>>([]);
 
   useEffect(() => {
@@ -635,32 +644,34 @@ export default function AdminAnalytics() {
     try {
       const days = visitorTrendDays;
 
-      const { data: trendsData, error: trendsError } = await supabase.rpc('get_pageview_daily_trends', {
+      const { data: trendsData, error: trendsError } = await supabase.rpc('get_pageview_daily', {
         days,
       });
 
       if (trendsError) {
-        console.error('[AdminAnalytics] fetchVisitorTrends - trends error:', trendsError);
+        console.error('[AdminAnalytics] fetchVisitorTrends - RPC error:', trendsError);
         if (trendsError.code === '42P01' || trendsError.message?.includes('relation') || trendsError.message?.includes('function')) {
-          setVisitorTrendData([]);
+          setDailyTrend([]);
           return;
         }
         throw trendsError;
       }
 
-      // Format data for chart
-      const formattedData = Array.isArray(trendsData) 
-        ? trendsData.map((item: any) => ({
-            date: item.date || new Date().toISOString().split('T')[0],
-            total_views: Number(item.total_views ?? 0),
-            unique_visitors: Number(item.unique_visitors ?? 0),
-          }))
-        : [];
+      // Handle array/object safely
+      const dataArray = Array.isArray(trendsData) ? trendsData : (trendsData ? [trendsData] : []);
 
-      setVisitorTrendData(formattedData);
+      // Format data for chart
+      const formattedData = dataArray.map((item: any) => ({
+        day: item.day || item.date || new Date().toISOString().split('T')[0],
+        views: Number(item.views ?? item.total_views ?? 0),
+        sessions: Number(item.sessions ?? item.unique_sessions ?? 0),
+        visitors: Number(item.visitors ?? item.unique_visitors ?? 0),
+      }));
+
+      setDailyTrend(formattedData);
     } catch (e) {
       console.error('[AdminAnalytics] fetchVisitorTrends error:', e);
-      setVisitorTrendData([]);
+      setDailyTrend([]);
     }
   };
 
@@ -670,6 +681,49 @@ export default function AdminAnalytics() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visitorTrendDays]);
+
+  const loadTrendData = async (days: 7 | 30) => {
+    try {
+      const { data, error } = await supabase.rpc('get_pageview_daily', { days });
+
+      if (error) {
+        console.error('[AdminAnalytics] loadTrendData - RPC error:', error);
+        setVisitorTrendData([]);
+        return;
+      }
+
+      // Handle array/object safely
+      const dataArray = Array.isArray(data) ? data : (data ? [data] : []);
+
+      const formattedData = dataArray.map((item: any) => ({
+        day: item.day || item.date || new Date().toISOString().split('T')[0],
+        views: Number(item.views ?? 0),
+        sessions: Number(item.sessions ?? 0),
+        visitors: Number(item.visitors ?? 0),
+      }));
+
+      setVisitorTrendData(formattedData);
+    } catch (e) {
+      console.error('[AdminAnalytics] loadTrendData error:', e);
+      setVisitorTrendData([]);
+    }
+  };
+
+  // Load trend data when Trend tab becomes active
+  useEffect(() => {
+    if (activeTab === 'trend' && !loading) {
+      loadTrendData(trendDays);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab, trendDays]);
+
+  // Load trend data when loading completes and tab is already trend
+  useEffect(() => {
+    if (!loading && activeTab === 'trend') {
+      loadTrendData(trendDays);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading]);
 
   useEffect(() => {
     // Only fetch visitor analytics after initial load is complete
@@ -845,7 +899,7 @@ export default function AdminAnalytics() {
             </CardContent>
           </Card>
         ) : (
-          <Tabs defaultValue="summary" className="space-y-6">
+          <Tabs defaultValue="summary" value={activeTab} onValueChange={setActiveTab} className="space-y-6">
             <TabsList>
               <TabsTrigger value="summary">Özet</TabsTrigger>
               <TabsTrigger value="link-health">Link Sağlığı</TabsTrigger>
@@ -1113,28 +1167,32 @@ export default function AdminAnalytics() {
                         </div>
                       </div>
 
-                      {visitorTrendData.length === 0 ? (
+                      {dailyTrend.length === 0 ? (
                         <div className="text-center py-12 text-muted-foreground">
                           Veri bulunamadı
                         </div>
                       ) : (
                         <ChartContainer
                           config={{
-                            total_views: {
+                            views: {
                               label: "Sayfa Görüntüleme",
                               color: "hsl(var(--chart-1))",
                             },
-                            unique_visitors: {
+                            sessions: {
+                              label: "Oturum",
+                              color: "hsl(var(--chart-3))",
+                            },
+                            visitors: {
                               label: "Ziyaretçi",
                               color: "hsl(var(--chart-2))",
                             },
                           }}
                           className="h-[400px]"
                         >
-                          <LineChart data={visitorTrendData}>
+                          <LineChart data={dailyTrend}>
                             <CartesianGrid strokeDasharray="3 3" />
                             <XAxis
-                              dataKey="date"
+                              dataKey="day"
                               tickFormatter={(value) => {
                                 const date = new Date(value);
                                 return date.toLocaleDateString("tr-TR", {
@@ -1160,14 +1218,21 @@ export default function AdminAnalytics() {
                             />
                             <Line
                               type="monotone"
-                              dataKey="total_views"
+                              dataKey="views"
                               stroke="hsl(var(--chart-1))"
                               strokeWidth={2}
                               dot={false}
                             />
                             <Line
                               type="monotone"
-                              dataKey="unique_visitors"
+                              dataKey="sessions"
+                              stroke="hsl(var(--chart-3))"
+                              strokeWidth={2}
+                              dot={false}
+                            />
+                            <Line
+                              type="monotone"
+                              dataKey="visitors"
                               stroke="hsl(var(--chart-2))"
                               strokeWidth={2}
                               dot={false}
@@ -1359,77 +1424,64 @@ export default function AdminAnalytics() {
             </TabsContent>
 
             <TabsContent value="trend" className="space-y-6">
-              {/* Ürün Trend Grafiği */}
               <Card>
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <BarChart3 className="h-5 w-5" />
-                    Son 30 Gün - Ürün Ekleme Trendi
-                  </CardTitle>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="flex items-center gap-2">
+                      <BarChart3 className="h-5 w-5" />
+                      Ziyaretçi Analitiği - Günlük Trend
+                    </CardTitle>
+                    <div className="flex gap-2">
+                      <Button
+                        variant={trendDays === 7 ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setTrendDays(7)}
+                      >
+                        7 Gün
+                      </Button>
+                      <Button
+                        variant={trendDays === 30 ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setTrendDays(30)}
+                      >
+                        30 Gün
+                      </Button>
+                    </div>
+                  </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="h-64 flex items-end gap-1">
-                    {trendData.products.map((item, index) => (
-                      <div
-                        key={index}
-                        className="flex-1 flex flex-col items-center gap-1 group"
-                      >
-                        <div
-                          className="w-full bg-primary rounded-t transition-all hover:bg-primary/80"
-                          style={{
-                            height: `${(item.count / maxTrendValue) * 100}%`,
-                            minHeight: item.count > 0 ? "4px" : "0",
-                          }}
-                          title={`${new Date(item.date).toLocaleDateString("tr-TR")}: ${item.count} ürün`}
-                        />
-                        {index % 5 === 0 && (
-                          <span className="text-xs text-muted-foreground transform -rotate-45 origin-left">
-                            {new Date(item.date).toLocaleDateString("tr-TR", {
-                              day: "2-digit",
-                              month: "2-digit",
-                            })}
-                          </span>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Blog Trend Grafiği */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <BarChart3 className="h-5 w-5" />
-                    Son 30 Gün - Blog Yayınlama Trendi
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="h-64 flex items-end gap-1">
-                    {trendData.posts.map((item, index) => (
-                      <div
-                        key={index}
-                        className="flex-1 flex flex-col items-center gap-1 group"
-                      >
-                        <div
-                          className="w-full bg-secondary rounded-t transition-all hover:bg-secondary/80"
-                          style={{
-                            height: `${(item.count / maxTrendValue) * 100}%`,
-                            minHeight: item.count > 0 ? "4px" : "0",
-                          }}
-                          title={`${new Date(item.date).toLocaleDateString("tr-TR")}: ${item.count} yazı`}
-                        />
-                        {index % 5 === 0 && (
-                          <span className="text-xs text-muted-foreground transform -rotate-45 origin-left">
-                            {new Date(item.date).toLocaleDateString("tr-TR", {
-                              day: "2-digit",
-                              month: "2-digit",
-                            })}
-                          </span>
-                        )}
-                      </div>
-                    ))}
-                  </div>
+                  {visitorTrendData.length === 0 ? (
+                    <div className="text-center py-12 text-muted-foreground">
+                      Veri bulunamadı
+                    </div>
+                  ) : (
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Gün</TableHead>
+                          <TableHead>Sayfa Görüntüleme</TableHead>
+                          <TableHead>Oturum</TableHead>
+                          <TableHead>Ziyaretçi</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {visitorTrendData.map((item, index) => (
+                          <TableRow key={index}>
+                            <TableCell className="font-medium">
+                              {new Date(item.day).toLocaleDateString("tr-TR", {
+                                day: "2-digit",
+                                month: "long",
+                                year: "numeric",
+                              })}
+                            </TableCell>
+                            <TableCell>{item.views.toLocaleString()}</TableCell>
+                            <TableCell>{item.sessions.toLocaleString()}</TableCell>
+                            <TableCell>{item.visitors.toLocaleString()}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>
